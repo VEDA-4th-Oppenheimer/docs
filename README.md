@@ -29,7 +29,7 @@ A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
 | 컴포넌트 | 문서 |
 |---|---|
 | [STM32](components/stm32/) | [펌웨어 개요](components/stm32/overview.md) · [모터 램프](components/stm32/motor-ramp.md) · [센서](components/stm32/sensors/) |
-| [Raspberry Pi](components/rpi/) | [드라이버·데몬 개요](components/rpi/overview.md) · [데몬 FSM](components/rpi/daemon-fsm.md) · [adts-web](components/rpi/web.md) |
+| [Raspberry Pi](components/rpi/) | [드라이버·데몬 개요](components/rpi/overview.md) · [IMU](components/rpi/imu.md) · [데몬 FSM](components/rpi/daemon-fsm.md) · [adts-web](components/rpi/web.md) |
 | [Qt](components/qt/) | [관제 콘솔 개요](components/qt/overview.md) · [빌드·배포](components/qt/build-and-deploy.md) |
 | Yocto · OpenSDK · 캘리브레이션 | [Confluence 지도](confluence-map.md) 참고 |
 

@@ -114,7 +114,7 @@ Confluence에 없는 것만 여기 둡니다.
 |---|---|
 | [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | [가감속 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44466191) |
 | [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | [라이다 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/24182819) |
-| [components/stm32/sensors/imu.md](components/stm32/sensors/imu.md) | [IMU 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44728356) |
+| [components/rpi/imu.md](components/rpi/imu.md) | [IMU 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44728356) |
 | [components/qt/overview.md](components/qt/overview.md) | [QT proto v2](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/40435717) |
 
 ## 여기서 작성한 문서

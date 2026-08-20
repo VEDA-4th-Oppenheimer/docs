@@ -10,6 +10,7 @@ A.D.T.S — 커널 드라이버(`/dev/turret`)와 통합 데몬, 그리고 폰 �
 | 문서 | 내용 |
 |---|---|
 | [overview.md](overview.md) | 드라이버 · 통합 데몬 전체 설명 |
+| [imu.md](imu.md) | IMU(ICM-20948) 수평 기준 — 드라이버·데몬 모듈 |
 | [daemon-fsm.md](daemon-fsm.md) | 스캔 상태머신 — 상태·전이·타임아웃·degraded 모드 |
 | [web.md](web.md) | `adts-web` — 폰 브라우저용 관제 서비스 |
 
