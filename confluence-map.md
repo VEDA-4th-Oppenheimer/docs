@@ -108,14 +108,23 @@ Confluence에 없는 것만 여기 둡니다.
 
 ---
 
-## 센서·모듈 문서 (전부 Confluence 원본)
+## 이 저장소에 전문이 있는 문서
 
-| 스텁 | Confluence 원본 |
-|---|---|
-| [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | [가감속 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44466191) |
-| [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | [라이다 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/24182819) |
-| [components/rpi/imu.md](components/rpi/imu.md) | [IMU 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44728356) |
-| [components/qt/overview.md](components/qt/overview.md) | [QT proto v2](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/40435717) |
+팀원이 **보고서를 쓸 때 참고할 본보기**로 두는 문서들입니다. 링크가 아니라 본문이
+들어 있어서, Confluence 접근이 없는 사람(채점자 등)도 그대로 읽을 수 있습니다.
+
+| 문서 | 줄 수 | Confluence 원본 |
+|---|---|---|
+| [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | 349 | [라이다 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/24182819) |
+| [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | 380 | [가감속 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44466191) |
+| [components/rpi/imu.md](components/rpi/imu.md) | 265 | [IMU 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44728356) |
+| [components/qt/overview.md](components/qt/overview.md) | 575 | [QT proto v2](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/40435717) |
+| [interfaces/qt-rpi-enroll-mtls.md](interfaces/qt-rpi-enroll-mtls.md) | 110 | [05. mTLS·Broker·Enrollment](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/41844783) |
+| [interfaces/mqtt-topic-contract.md](interfaces/mqtt-topic-contract.md) | 전문 | [MQTT 토픽 계약 v1.4](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/31162383) |
+| [interfaces/scan-output-format.md](interfaces/scan-output-format.md) | 전문 | [스캔 산출물 포맷](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/38240259) |
+
+> Confluence 쪽이 더 최신일 수 있습니다. 저장소 사본은 **스냅샷**으로 보고,
+> 발표·제출 전에 한 번 대조하세요.
 
 ## 여기서 작성한 문서
 
