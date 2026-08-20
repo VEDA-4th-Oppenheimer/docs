@@ -1,7 +1,7 @@
 # 2축 스캐너 디바이스 아키텍처 — RPi 드라이버·데몬 / STM32 펌웨어 전체 동작 명세
 
-> **원본**: [2축 스캐너 디바이스 아키텍처 (Confluence, 팀 내부)](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/29032450)
-> · [아키텍처 다이어그램 (Mermaid)](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/29360148)
+> 출처: 2축 스캐너 디바이스 아키텍처 (팀 위키 문서)
+> · 아키텍처 다이어그램 (Mermaid)
 > **이 사본**: 2026-08-21 기준 스냅샷
 > 작성: 이현우 (Device 총괄) · 기준 브랜치: RPi `develop` / STM32 `develop` · PROTO_VERSION 5
 

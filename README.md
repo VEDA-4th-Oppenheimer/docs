@@ -19,7 +19,7 @@ A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
 
 | 계약 | 경계 | 원본 |
 |---|---|---|
-| [MQTT 토픽 계약 v1.4](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/31162383) | Qt ↔ RPi 데몬 | Confluence |
+| MQTT 토픽 계약 v1.4 | Qt ↔ RPi 데몬 | Confluence |
 | [스캔 산출물 좌표계·포맷](interfaces/scan-output-format.md) | 데몬 → Qt·캘리브 | Confluence |
 | [STM32 ↔ RPI UART 프로토콜](interfaces/stm32-rpi-uart.md) | STM32 ↔ RPi | `shared/protocol.h` |
 | [Qt ↔ RPi 발급 서버 (mTLS)](interfaces/qt-rpi-enroll-mtls.md) | 인증서 전반 | Confluence |
@@ -44,9 +44,9 @@ A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
 ## 그 외
 
 - [시스템 아키텍처](overview/architecture.md) — 구성도·경계·데이터 흐름 *(초안, Confluence 아키텍처 문서와 중복 주의)*
-- [요구사항](overview/requirements.md) — *Confluence의 [SRS](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/22052873) 참고*
+- [요구사항](overview/requirements.md) — *Confluence의 SRS 참고*
 - [decisions/](decisions/) — 기술 결정 기록(ADR)
-- [meetings/](meetings/) — *[Confluence 회의록](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/425985) 참고*
+- [meetings/](meetings/) — *Confluence 회의록 참고*
 
 ---
 

@@ -1,6 +1,6 @@
 # MQTT 토픽 계약 — Qt 관제 ↔ RPi 스캐너 데몬
 
-> **원본**: [MQTT 토픽 계약 (Confluence, 팀 내부)](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/31162383)
+> 출처: MQTT 토픽 계약 (팀 위키 문서)
 > **이 사본**: 2026-08-21 기준 스냅샷 · 계약 버전 **v1.4** · 현행 구현 대조 2026-08-19
 > (`RPi main/7b347a4` + `STM32 main/003e483` + `Qt main/5888153`)
 

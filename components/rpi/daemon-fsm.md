@@ -1,6 +1,6 @@
 # 통합 데몬 — 100ms tick · heartbeat · HOME · FSM 전이
 
-> **원본**: [02-2. 100ms tick·heartbeat·HOME·FSM 전이 상세 (Confluence, 팀 내부)](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/42565636)
+> 출처: 02-2. 100ms tick·heartbeat·HOME·FSM 전이 상세 (팀 위키 문서)
 > **이 사본**: 2026-08-21 기준 스냅샷
 > 기준 함수: `core_tick`, `core_poll_link`, `core_await_home`, `core_eval_state`, `core_transition`
 > 코드 기준: `develop` / `4372771` / 2026-08-19
@@ -187,6 +187,6 @@ rearm+disarm, **0점 timeout**, `SCAN_DONE` 유실, stop partial export, output 
 
 ## 관련
 
-- [02. adts_daemon 코어·FSM·스캔 산출물](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/41877508)
+- 02. adts_daemon 코어·FSM·스캔 산출물
 - [MQTT 토픽 계약 §5](../../interfaces/mqtt-topic-contract.md) — Qt UI 매핑
 - [스캔 산출물 포맷](../../interfaces/scan-output-format.md)

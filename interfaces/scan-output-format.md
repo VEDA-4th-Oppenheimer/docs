@@ -1,6 +1,6 @@
 # 스캔 산출물 포맷 — `.json` / `.pcd` 전 필드 레퍼런스
 
-> **원본**: [스캔 산출물 포맷 상세 (Confluence, 팀 내부)](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/38240259)
+> 출처: 스캔 산출물 포맷 상세 (팀 위키 문서)
 > **이 사본**: 2026-08-21 기준 스냅샷
 > 구현: `RPi/daemon/core/scan_output.c` · 담당 이현우
 > 기준: `develop/a21a23f` · `schema_version 1.2` / `interface_version 1.0` / `protocol_version 5`
