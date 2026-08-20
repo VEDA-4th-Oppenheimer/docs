@@ -6,6 +6,8 @@ A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
 >
 > **[→ Confluence 지도 (VPT 스페이스 104페이지)](confluence-map.md)**
 >
+> [→ 코드 대조 기록](verification-log.md) — 어느 문서를 확인했고 어디가 어긋나는지
+>
 > 이 저장소는 **그리로 가는 지도**이고, Confluence에 없는 것만 여기 둡니다.
 > 문서를 찾고 있다면 지도부터 보세요.
 
