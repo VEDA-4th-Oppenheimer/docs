@@ -1,110 +1,23 @@
 # Qt ↔ RPi 발급 서버 계약 (mTLS)
 
-> 원본(`STM32/docs/qt_enroll_mtls.md`)이 큰 문서의 **7.2절만 떼어낸 조각**이라
-> 앞뒤 맥락이 빠져 있습니다. 나머지 절을 찾으면 이어 붙여주세요.
+**원본: [05. mTLS·Broker·Enrollment·배포](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/41844783)** (Confluence)
 
-### 7.2 발급 서버 계약 (RPi 쪽 구현 기준)
-
-```
-POST https://<host>:8443/enroll
-    {"token": "...", "device_name": "..."}
-
-200 {"cn":"qt-console-<라벨>",
-     "ca_crt":"-----BEGIN CERTIFICATE-----\n...",
-     "client_crt":"-----BEGIN CERTIFICATE-----\n...",
-     "client_key":"-----BEGIN RSA PRIVATE KEY-----\n...",
-     "mqtt":{"host":"...","port":8883},
-     "cameras":{"channels":{"1":"rtsp://...", ...}}}
-```
-
-| 코드 | 언제 |
+| 하위 문서 | 내용 |
 |---|---|
-| `400` | JSON 파싱 실패, `token` 없음, `Content-Length` 없음/초과, 본문 잘림 |
-| `401` | 토큰이 틀렸거나 **이미 사용됨** — 둘을 구분해 알려주지 않는다 |
-| `404` | 없는 경로 |
-| `500` | 인증서 발급 실패, 또는 **ACL 갱신 실패**(인증서는 나갔는데 권한이 없는 상태) |
+| [05-1. TLS·mTLS·PKI·인증서 역할과 검증](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/43057218) | 개념·검증 흐름 |
+| [05-2. Mosquitto mTLS·CN ACL·MQTT authorization](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/42696728) | 브로커 설정 |
+| [05-3. Enrollment service — token·certificate·ACL·PCD download](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/42795053) | 발급 서비스 |
+| [05-4. systemd·install-service·운영 설정·배포 runbook](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/42532870) | 배포 |
 
-> 서버는 `409` 를 보내지 않는다. 이 문서 이전 판에 `401/409` 로 적혀 있었으나
-> `enroll_service.c` 가 내는 코드는 위 넷뿐이다.
+클라이언트 쪽 요구사항과 Windows 함정은
+[MQTT 토픽 계약 §6](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/31162383)에 있습니다.
 
-`cameras` 는 **없을 수 있다.** RPi 에 `/etc/adts/cameras.json` 이 없거나 JSON 이 깨지면
-서버가 경고만 남기고 그 키 없이 200 을 준다 — MQTT 는 되고 영상만 안 나오는 상태다.
+## 요점만
 
-`mqtt.host` 는 서버에 `ADTS_MQTT_HOST` 가 설정돼 있으면 그 값, 비어 있으면 **요청의 Host
-헤더**를 그대로 돌려준다. 클라이언트가 IP 로 접속했으면 그 IP 가 내려온다.
+- **포트 8883(MQTT)과 8443(HTTPS)이 같은 mTLS 인증서를 씁니다.** Qt는 파일 3개
+  (`ca.crt` / `qt-console.crt` / `qt-console.key`)로 둘 다 접속합니다.
+- **개인키는 저장소에 커밋하지 마세요.** `ca.key`는 RPi에만 있고 배포되지 않습니다.
+- 서버 인증서가 `CN=raspberrypi`로 발급되므로, IP로 접속할 때 TLS 호스트명 검증용
+  이름을 따로 지정해야 합니다.
 
-#### 세 경로의 인증 강도가 다르다
-
-같은 킷을 상대하지만 신원을 확인하는 방법이 경로마다 다르다.
-
-| 경로 | 서버 검증 | 클라이언트 검증 | 권한 |
-|---|---|---|---|
-| `POST :8443/enroll` | 박아둔 `ca.crt` | **없음** — 1회용 토큰이 신원 | 토큰 라벨 → CN |
-| `GET :8443/scans`·`/scan/<파일>` | 〃 | **필수** | 읽기 전용, `.pcd` 만 |
-| MQTT `:8883` | `ca.crt` | **필수** (`require_certificate`) | CN → ACL 정확매칭 |
-
-1행 때문에 서버는 `SSL_VERIFY_PEER` 만 켜고 `FAIL_IF_NO_PEER_CERT` 는 켜지 못한다 —
-인증서를 받으러 오는 사람에게 인증서를 요구할 수 없기 때문이다. 그래서 2행의 검증은
-TLS 계층이 아니라 **핸들러가 `SSL_get_verify_result` 를 직접 확인**해서 한다(§6).
-
-서버 신원은 실행파일에 박아둔 `resources/ca.crt` 로만 검증한다(시스템 CA 는 쓰지 않는다).
-발급 시점에는 클라이언트 인증서가 없어 검증 근거가 이것뿐이다. `ca.crt` 는 **공개**
-인증서라 배포본에 들어가도 안전하다.
-
-#### 토큰이 보증하는 것과 보증하지 않는 것
-
-- **라벨이 CN 접미사가 된다** (`qt-console-<라벨>`). 토큰을 누가 입력하든 그 라벨의
-  권한을 받는다 — 토큰은 "사람"이 아니라 **관리자가 미리 정해둔 권한 한 칸**이다.
-  입력란의 `기기 이름` 은 로그 구분용일 뿐 권한과 무관하다.
-- **1회용이다.** 검증에 성공하면 서버가 그 줄을 토큰 파일에서 지우고 파일을 원자적으로
-  교체한다. 같은 토큰으로 다시 부르면 401 이다.
-- **틀린 토큰과 이미 쓴 토큰을 구분해주지 않는다.** 추측을 돕지 않기 위해서다. 사용자가
-  "내 토큰이 만료된 건지 오타인지" 물어오면 관리자가 `--list-tokens` 로 봐야 한다.
-- 토큰 비교는 상수 시간(`CRYPTO_memcmp`)이다.
-
-#### 발급 한 번에 서버가 하는 일
-
-1. 토큰 검증 → 소비(줄 삭제 + 원자적 교체)
-2. `gen-certs.sh --client <CN>` 을 fork/exec — 서명 로직을 서비스 안에 다시 구현하지
-   않는다. `v3_client` 확장이나 키 포맷 같은 세부가 두 곳으로 갈라지는 것을 막기 위해서다
-3. ACL 에 CN 블록 추가 후 `systemctl reload mosquitto` (이미 있으면 건너뛴다)
-4. 인증서 3종 + `mqtt` + `cameras` 를 JSON 으로 응답
-
-3번은 `restart` 가 아니라 **`reload`** 다. restart 를 쓰면 붙어 있던 클라이언트가 전부
-끊긴다 — 남이 등록하는 동안 내 콘솔이 끊기면 안 된다.
-
-#### 서버 구현에서 놓치기 쉬운 것
-
-- **발급할 때마다 브로커 ACL 에 CN 을 추가**해야 한다. mosquitto ACL 은 `user <CN>`
-  정확 매칭이라 와일드카드가 없다. 빠뜨리면 인증서는 정상인데 구독·발행이 조용히 막힌다.
-- 인증서 서명에 **`-extensions v3_client`** 를 붙인다. 빠지면 mTLS 핸드셰이크에서 거부된다.
-- 클라이언트 키는 **전통 RSA 포맷**으로 내려준다. PKCS#8 이면 `QSslKey` 가 null 을
-  반환하고 **조용히** 실패한다. (Paho 는 OpenSSL 을 직접 써서 PKCS#8 도 읽는다 —
-  그래서 MQTT 는 되는데 8443 만 안 되는 모습이 나온다.) OpenSSL 3.x 는 `openssl rsa` 의
-  기본 출력도 PKCS#8 이라 `-traditional` 이 필요하다.
-
-#### 인증서 수명 · CA 재발급
-
-유효기간은 3650일이다. 다만 **RPi 에는 RTC 가 없어** 인터넷 없이 부팅하면 시계가 과거로
-돌아가고, 그 상태에서는 멀쩡한 인증서가 `not yet valid` 로 거부된다. 증상이 "어제까지
-되던 게 오늘 갑자기 전부 안 됨"으로 나타나므로 인증서를 의심하기 전에 `date` 와
-fake-hwclock 을 먼저 본다.
-
-CA 를 재발급하면 파급이 넓다 — 서버·데몬·모든 콘솔 인증서를 다시 발급해야 하고, Qt
-저장소의 `resources/ca.crt` 도 교체해 **배포본을 다시 빌드**해야 한다. 이걸 빠뜨리면 기존
-배포본은 새 서버를 검증하지 못해 등록 자체가 안 된다.
-
-#### 무효화(CRL)는 없다
-
-`모드 → 로그아웃` 은 이 PC 에 저장된 인증서·설정을 지울 뿐이다. **발급된 인증서 자체는
-암호학적으로 여전히 유효하다** — 파일을 따로 복사해 뒀다면 다시 붙일 수 있다. 같은
-라벨로 재발급해도 이전 인증서는 살아 있다(서버가 WARN 을 남긴다).
-
-- **권한만 끊기**: RPi 에서 ACL 의 `user qt-console-<라벨>` 블록 삭제 → reload.
-  연결은 되지만 아무것도 못 한다.
-- **연결까지 끊기**: `mosquitto.conf` 에 `crlfile` 을 걸어야 한다. **현재 미적용** —
-  기기 분실 대응이 필요해지면 도입한다.
-
-관리자용 절차(최초 구축, 토큰 생성·목록·회수, 서비스 빌드·설치, 문제 해결)는 RPi 저장소
-`README.md` 의 **🔐 MQTT 브로커 · 인증서** 절에 있다. 이 문서는 클라이언트가 서버에
-기대하는 계약만 다룬다.
+발급 담당: 이광진

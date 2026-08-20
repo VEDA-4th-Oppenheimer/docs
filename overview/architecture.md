@@ -122,31 +122,43 @@ retain하면 재접속할 때마다 스캔이 다시 실행되는 안전 사고�
 
 미구현: `led` 모듈(`/dev/led`) STUB, `vision` 진행 중.
 
-## ⚠️ 지금 어긋나 있는 것들
+## ⚠️ 이 문서를 읽기 전에 — 진짜 최신은 Confluence입니다
 
-아키텍처 그림보다 이쪽이 더 급합니다.
+이 문서는 **로컬 작업 트리의 코드와 README에서** 재구성한 것입니다. 그런데 팀의 실제
+문서는 [Confluence VPT 스페이스](https://lkj000619.atlassian.net/wiki/spaces/VPT)에 104개
+페이지로 있고, 그쪽이 훨씬 최신입니다. 아래는 대조하면서 확인된 차이입니다.
 
-**1. `protocol.h` 사본이 마스터보다 앞서 있습니다.**
+**원인을 특정했습니다**: `~/ClionProjects/RPi`가 `feature/web-console` 브랜치에 있고
+`origin/main`보다 **65커밋 뒤처져** 있습니다. QT(`5888153`)와 STM32(`003e483`)는
+계약서가 인용한 커밋과 정확히 일치하니, RPi 하나만 낡은 것입니다.
 
-| 사본 | 버전 | 규칙상 |
+| 항목 | 이 저장소가 근거로 삼은 로컬 트리 | Confluence·`origin/main` 현행 |
 |---|---|---|
-| `RPi/shared/protocol.h` | **v5** | 마스터 — 여기서 먼저 고쳐야 함 |
-| `STM32/shared/protocol.h` | **v6** | 다운스트림 — 마스터를 따라가야 함 |
+| `protocol.h` | RPi v5 / STM32 v6 | **양쪽 v6, md5까지 동일** — drift-check 정상 |
+| MQTT 계약 | "v1.0의 `adts/kit1/...`과 실구현이 다름" | **v1.4** — `kit1`은 의도적으로 제거(YAGNI) |
+| `cmd/rearm` | "계약 외 확장" | **v1.2에서 정식 추가된 계약** |
+| IMU | MPU-6050 | **ICM-20948** (2026-08-13 교체) |
+| 데몬 모듈 | mqtt · imu · led(STUB) | **+ camera 모듈** (JSON을 mTLS TCP 2222로 카메라에 직접 업로드) |
 
-규칙은 "RPi에서 먼저 수정하고 STM32 사본을 맞춘다"인데 반대로 돼 있습니다.
-v6 변경(`proto_err.axis` 1B→2B, `ERR_BUSY`/`ERR_ENCODER`, `proto_status` 5B→15B)이
-RPi에 없어서, STM32가 보내는 `proto_status`를 드라이버가 길이 불일치로 버립니다.
-drift-check CI가 이걸 잡아야 하는데 통과하고 있다면 CI도 함께 확인하세요.
+→ [MQTT 토픽 계약 v1.4](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/31162383) ·
+[스캔 산출물 포맷 전 필드 레퍼런스](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/38240259) ·
+[RPi 코드 기반 완전 개발 보고서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/41844741)
 
-**2. 문서에 적힌 프로토콜 버전이 낡았습니다.**
-`components/stm32/overview.md`는 `PROTO_VERSION=3`이라고 적고 있습니다(실제 v6).
-[CONTRIBUTING 0번 규칙](../CONTRIBUTING.md)대로, 값을 문서에 적지 말고 헤더를 링크하세요.
+**로컬 작업 트리(`~/ClionProjects`)가 낡았습니다.** 원격 브랜치를 받아오면
+위 차이는 대부분 사라질 것으로 보입니다.
 
-**3. MQTT 토픽이 계약서와 다릅니다.**
-계약서 v1.0은 `adts/kit1/...`인데 데몬 실구현에는 `kit1` 세그먼트가 없고,
-Qt는 실구현 쪽에 맞춰져 있습니다. 계약서를 실구현에 맞추든 반대로 하든 한쪽으로 확정해야 합니다.
+## 아직 열려 있는 것 (Confluence 기준)
 
-**4. `adts/cmd/rearm`은 계약 외 확장입니다.** 계약서에 반영이 필요합니다.
+문서 불일치가 아니라 실제 미결 사항입니다.
+
+1. **방위 부호(손대칭) 미검증** — 평평한 천장·바닥은 회전 대칭이라 mirror 버그를 못 잡습니다.
+   비대칭 지형지물로 대조하기 전까지 방위 손대칭을 신뢰하면 안 됩니다.
+2. **IMU 설치각 오프셋을 킷이 3.6° 기울어진 상태에서 잡았습니다.** 보정이 기울기를
+   줄이는 게 아니라 키우는 상태라, 데몬 게이트 임계가 10.0°로 열려 있습니다 — 사실상
+   아무것도 막지 않습니다. 킷을 바로 세우고 재측정해야 합니다.
+3. **되감기 15초는 잠정치** — 프로토콜에 "되감기 완료" 통지가 없어 시간으로 때우고 있습니다.
+4. **파일명 충돌 가능** — 초 단위 session + 고정 `sweep-000001`이라 같은 초에 두 결과를
+   마감하면 덮어씁니다.
 
 ---
 
