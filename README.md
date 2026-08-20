@@ -12,6 +12,7 @@ A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
 |---|---|
 | [STM32 ↔ RPI UART 프로토콜](interfaces/stm32-rpi-uart.md) | 프레임 구조, 명령 개요, 시퀀스, 에러 복구 |
 | [Qt ↔ RPi 발급 서버 계약 (mTLS)](interfaces/qt-rpi-enroll-mtls.md) | 인증서 발급, 토큰이 보증하는 것, CA 재발급 |
+| [스캔 산출물 좌표계 · 포맷](interfaces/scan-output-format.md) | 좌표계, 기구각→계약각, 라이다 오프셋, organized 격자 |
 
 ## 컴포넌트
 
@@ -34,7 +35,8 @@ A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
 
 ## 그 외
 
-- [시스템 아키텍처](overview/architecture.md) · [요구사항](overview/requirements.md) — *작성 전*
+- [시스템 아키텍처](overview/architecture.md) — 구성도, 세 개의 경계, 설계 결정 *(초안)*
+- [요구사항](overview/requirements.md) — *작성 전*
 - [decisions/](decisions/) — 기술 결정 기록(ADR)
 - [meetings/](meetings/) — 회의록
 
