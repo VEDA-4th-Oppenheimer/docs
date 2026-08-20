@@ -108,14 +108,33 @@ Confluence에 없는 것만 여기 둡니다.
 
 ---
 
-## 이 저장소에만 있는 것
+## 이 저장소가 유일한 사본인 문서
 
-Confluence에 대응 페이지가 없어 여기 남긴 문서들입니다.
+⚠️ **아래 넷은 다른 어디에도 없습니다.** 원래 각 코드 저장소의 `docs/`에 있었지만
+git으로 추적되지 않던 파일이라, 지금은 여기가 유일한 사본입니다.
 
-| 문서 | 출처 |
+| 문서 | 원래 위치 |
 |---|---|
-| [components/stm32/overview.md](components/stm32/overview.md) | STM32 저장소 README |
-| [components/rpi/overview.md](components/rpi/overview.md) · [web.md](components/rpi/web.md) | RPi 저장소 README |
-| [components/qt/build-and-deploy.md](components/qt/build-and-deploy.md) · [overview.md](components/qt/overview.md) | QT 저장소 README·docs |
-| [guides/](guides/) | 각 저장소의 빌드·환경 문서 |
-| [overview/architecture.md](overview/architecture.md) | 이 저장소에서 작성 (Confluence 아키텍처 문서와 중복 주의) |
+| [components/qt/overview.md](components/qt/overview.md) | `QT/docs/QT_CONSOLE_OVERVIEW.md` |
+| [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | `STM32/docs/motor_ramp.md` |
+| [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | `STM32/docs/lidar.md` |
+| [components/stm32/sensors/imu.md](components/stm32/sensors/imu.md) | `STM32/docs/imu.md` |
+
+> **각 코드 저장소에 커밋하는 편이 낫습니다.** 코드와 같은 PR에서 리뷰되어야
+> 안 썩습니다. 옮기고 나면 여기는 스텁으로 줄이면 됩니다.
+
+## 여기서 작성한 문서
+
+| 문서 | 비고 |
+|---|---|
+| [overview/architecture.md](overview/architecture.md) | Confluence의 [2축 스캐너 아키텍처](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/29032450)와 주제가 겹칩니다 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 이 저장소의 작성 규칙 |
+| [decisions/](decisions/) · [meetings/](meetings/) | 템플릿만 있음 |
+
+## 코드 저장소 README를 가리키는 스텁
+
+[components/rpi/overview.md](components/rpi/overview.md) ·
+[components/rpi/web.md](components/rpi/web.md) ·
+[components/stm32/overview.md](components/stm32/overview.md) ·
+[components/qt/build-and-deploy.md](components/qt/build-and-deploy.md) ·
+[guides/](guides/)
