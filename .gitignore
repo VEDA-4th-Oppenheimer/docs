@@ -1,0 +1,12 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+
+# 임시 파일
+*~
+*.swp
+*.tmp
