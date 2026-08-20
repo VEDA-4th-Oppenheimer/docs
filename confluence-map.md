@@ -127,7 +127,7 @@ git으로 추적되지 않던 파일이라, 지금은 여기가 유일한 사본
 
 | 문서 | 비고 |
 |---|---|
-| [overview/architecture.md](overview/architecture.md) | Confluence의 [2축 스캐너 아키텍처](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/29032450)와 주제가 겹칩니다 |
+| [overview/architecture.md](overview/architecture.md) | Confluence 아키텍처 문서를 가리키는 스텁 + **코드 대조로 확인된 낡은 부분 표** |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 이 저장소의 작성 규칙 |
 | [decisions/](decisions/) · [meetings/](meetings/) | 템플릿만 있음 |
 
