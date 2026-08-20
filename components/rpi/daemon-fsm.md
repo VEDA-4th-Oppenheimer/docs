@@ -188,5 +188,5 @@ rearm+disarm, **0점 timeout**, `SCAN_DONE` 유실, stop partial export, output 
 ## 관련
 
 - 02. adts_daemon 코어·FSM·스캔 산출물
-- [MQTT 토픽 계약 §5](../../interfaces/mqtt-topic-contract.md) — Qt UI 매핑
-- [스캔 산출물 포맷](../../interfaces/scan-output-format.md)
+- MQTT 토픽 계약 §5 — Qt UI 매핑
+- 스캔 산출물 포맷

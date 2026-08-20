@@ -36,14 +36,14 @@ RPi 커널 드라이버 / RPi 유저 데몬 / STM32 펌웨어 각각이 무슨 �
 | IMU 부품 | MPU-6050 | **ICM-20948** (2026-08-13 교체) |
 
 또한 **가감속 램프**가 도입되어 §5.2의 고정 속도 서술이 바뀌었다 —
-[components/stm32/motor-ramp.md](../components/stm32/motor-ramp.md) 참고.
+components/stm32/motor-ramp.md 참고.
 
 ### 틸트 각속도가 문서마다 다르다
 
 | 출처 | 틸트 각속도 | 샘플 간격 |
 |---|---|---|
-| 이 문서 · [MQTT 계약 v1.4](../interfaces/mqtt-topic-contract.md) §3.1 | 90°/s | 0.9° (셀당 1점) |
-| `scan_output.c` 주석 · [산출물 포맷](../interfaces/scan-output-format.md) §2.4 | 45°/s | 0.45° (셀당 2점) |
+| 이 문서 · MQTT 계약 v1.4 §3.1 | 90°/s | 0.9° (셀당 1점) |
+| `scan_output.c` 주석 · 산출물 포맷 §2.4 | 45°/s | 0.45° (셀당 2점) |
 | **현재 STM32 코드** (`main/003e483`) | **45°/s** (TIM2 = 400Hz) | 0.45° |
 
 코드는 45°/s이지만 2026-08-11 스캔 실측(206점/줄)은 90°/s에서 찍힌 값이다. 그 뒤 속도가
@@ -101,7 +101,6 @@ RPi 커널 드라이버 / RPi 유저 데몬 / STM32 펌웨어 각각이 무슨 �
 Tilt=I2C1로 버스를 나눴다. 어느 축인지는 코드가 I2C 핸들로 구분한다.
 
 > IMU(ICM-20948)는 여기 없다 — **RPi I2C1**에 붙어 있고 STM32 펌웨어에는 IMU 코드가 없다.
-> → [components/rpi/imu.md](../components/rpi/imu.md)
 
 ### 2.2 부품 사양
 
@@ -280,7 +279,6 @@ z =  range · cos(tilt) · cos(pan)
 > ⚠️ 원본의 표(Pan 400Hz/45°/s, Tilt 800Hz/90°/s)는 현행과 다르다. 현재 코드는
 > **Pan 100Hz(11.25°/s) / Tilt 400Hz(45°/s)** 이고, 가감속 램프가 ARR을 펄스마다 다시
 > 쓰므로 CubeMX가 넣어둔 Period 값 자체는 램프 계층이 덮어쓴다.
-> → [motor-ramp.md](../components/stm32/motor-ramp.md) §5
 
 ### 5.3 ISR이 하는 일 — 펄스 하나뿐
 
@@ -445,7 +443,7 @@ MT6701 분해능이 0.022°이고 1스텝이 0.1125°이므로, 0.3°(약 3스�
 
 ## 8. 통신 프로토콜
 
-프레임·명령·payload 구조는 → [interfaces/stm32-rpi-uart.md](../interfaces/stm32-rpi-uart.md)
+프레임·명령·payload 구조는 → interfaces/stm32-rpi-uart.md
 
 ```
 [SOF 0xAA][CMD 1B][LEN 1B][PAYLOAD 0~24B][CRC16 2B]   최대 29B
@@ -562,7 +560,6 @@ RPi는 오버레이 + `insmod turret_driver.ko` → `/dev/turret` 생성 → 데
 
 > ⚠️ 현행은 여기에 더해 **양축을 홈 자세로 이동**시키고 오차 0.3° 초과 시 최대 10회
 > 세부조정한다. 최악 팬 180° 이동(≈8초) + 정착(3초).
-> → [MQTT 계약 §3.2](../interfaces/mqtt-topic-contract.md)
 
 ### 10.4 스캔 시퀀서 상태 전이
 
@@ -635,7 +632,7 @@ RPi는 오버레이 + `insmod turret_driver.ko` → `/dev/turret` 생성 → 데
 | link_dead | PONG 300ms 무응답 | ST_DISARM |
 | IWDG 리셋 | 메인루프 1.25초 정지 | 재부팅 → 재홈 필요 |
 
-전체 코드표는 → [MQTT 토픽 계약 §3.5](../interfaces/mqtt-topic-contract.md)
+전체 코드표는 → MQTT 토픽 계약 §3.5
 
 ## 11. 타이밍 · 자원 예산 *(원본 = step 10 / 틸트 800pps 기준)*
 

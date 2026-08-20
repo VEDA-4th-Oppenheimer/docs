@@ -36,7 +36,7 @@
 ## 6. RPI로 올려보내는 값
 
 CMD 번호와 payload 레이아웃은
-[interfaces/stm32-rpi-uart.md](../../../interfaces/stm32-rpi-uart.md)에 적습니다.
+interfaces/stm32-rpi-uart.md에 적습니다.
 여기에는 링크만 두고 **복사하지 마세요.**
 
 ## 7. 안 되던 것

@@ -93,7 +93,6 @@ pan start/end, tilt start/end는 signed 16-bit deci-degree이고 step은 unsigne
 > `0 < step_ddeg <= 3600`을 확인하므로 음수와 일반적인 초과값은 거절한다. 그러나 MQTT/CLI가
 > 그 전에 `int16_t`/`uint16_t`로 줄이므로 **매우 큰 정수가 modulo wrap 후 유효한 각도로
 > 보일 수 있다**(예: 65546 → 10). 넓은 타입에서 범위를 확인한 뒤 cast해야 계약이 완결된다.
-> → `daemon/modules/mqtt/mqtt_module.c` 451~455행. **`origin/main`에 그대로 있다.**
 
 ### 5.2 `proto_scan_point` 18B
 
@@ -205,7 +204,7 @@ namespace를 나눈 이유는 **Qt가 code 하나만 보고 어느 계층에서 
 위해서다. 데몬이 JSON parse 오류에 STM의 `ERR_OUT_OF_RANGE=4`를 재사용하면 통신은 되지만
 원인 분석이 불가능해진다.
 
-전체 코드표 → [MQTT 토픽 계약 §3.5](mqtt-topic-contract.md)
+전체 코드표 → MQTT 토픽 계약 §3.5
 
 ## 14. frame 예시를 해석하는 방법
 

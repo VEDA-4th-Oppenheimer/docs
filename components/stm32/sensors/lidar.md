@@ -319,7 +319,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 | 8.9 | `g_rx_byte` | `HAL_UART_Receive_IT` 가 주소를 물고 있어 파일 스코프 필요 |
 | 14.4 | `__HAL_UART_CLEAR_PEFLAG` | ST HAL의 `do{...}while(0U)` 관용구 |
 
-폴더 통째 억제로 되돌리지 않습니다 — [정적분석 가이드](../../../guides/stm32-static-analysis.md) §2 참조.
+폴더 통째 억제로 되돌리지 않습니다 — 정적분석 가이드 §2 참조.
 
 ---
 
@@ -346,4 +346,4 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 - Nooploop 공식 Support: Protocol — `support.nooploop.com/tofsense/protocol`
 - Nooploop 공식 Support: Example Code — `support.nooploop.com/tofsense/example-code`
 - 공식 NLink 파서 (C) — `github.com/nooploop-dev/nlink_unpack`
-- 사내 문서: [정적분석 가이드](../../../guides/stm32-static-analysis.md), `shared/protocol.h`(통신 계약)
+- 사내 문서: 정적분석 가이드, `shared/protocol.h`(통신 계약)

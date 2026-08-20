@@ -92,7 +92,6 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -C <kernel_src> M=$PWD modules
 > **함정**: `modules_prepare`만으론 정확한 `Module.symvers`가 안 생긴다.
 > insmod가 되려면 타깃의 `Module.symvers`(headers 패키지 안에 있음)를 소스 트리에 갖다놔야 한다.
 > 이 매칭이 번거로워서 사람들이 "그냥 커널을 통째로 빌드"하게 되는 것.
-> → **속도 이득 대비 번거로움이 커서 현 단계엔 비추. 방법 A 권장.**
 
 ### 빌드 후 아키텍처 확인 (필수)
 

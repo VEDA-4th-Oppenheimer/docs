@@ -376,5 +376,5 @@ TIM1/TIM2 Base IRQ
 ## 11. 관련 문서
 
 - `App/motor/motor.h` — 램프 상수 정의
-- [라이다 수신 드라이버](sensors/lidar.md) — 8절 경계 조건의 반대쪽 절반(100Hz 레이트, 각도 래치)
-- [정적분석 가이드](../../guides/stm32-static-analysis.md)
+- 라이다 수신 드라이버 — 8절 경계 조건의 반대쪽 절반(100Hz 레이트, 각도 래치)
+- 정적분석 가이드
