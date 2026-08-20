@@ -108,20 +108,14 @@ Confluence에 없는 것만 여기 둡니다.
 
 ---
 
-## 이 저장소가 유일한 사본인 문서
+## 센서·모듈 문서 (전부 Confluence 원본)
 
-⚠️ **아래 넷은 다른 어디에도 없습니다.** 원래 각 코드 저장소의 `docs/`에 있었지만
-git으로 추적되지 않던 파일이라, 지금은 여기가 유일한 사본입니다.
-
-| 문서 | 원래 위치 |
+| 스텁 | Confluence 원본 |
 |---|---|
-| [components/qt/overview.md](components/qt/overview.md) | `QT/docs/QT_CONSOLE_OVERVIEW.md` |
-| [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | `STM32/docs/motor_ramp.md` |
-| [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | `STM32/docs/lidar.md` |
-| [components/stm32/sensors/imu.md](components/stm32/sensors/imu.md) | `STM32/docs/imu.md` |
-
-> **각 코드 저장소에 커밋하는 편이 낫습니다.** 코드와 같은 PR에서 리뷰되어야
-> 안 썩습니다. 옮기고 나면 여기는 스텁으로 줄이면 됩니다.
+| [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | [가감속 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44466191) |
+| [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | [라이다 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/24182819) |
+| [components/stm32/sensors/imu.md](components/stm32/sensors/imu.md) | [IMU 센서 문서](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/44728356) |
+| [components/qt/overview.md](components/qt/overview.md) | [QT proto v2](https://lkj000619.atlassian.net/wiki/spaces/VPT/pages/40435717) |
 
 ## 여기서 작성한 문서
 
