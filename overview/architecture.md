@@ -6,7 +6,9 @@
 
 ## 구성도
 
-![구조도](../assets/architecture.png)
+<!-- 이미지는 assets/ 폴더를 만들어 넣고 아래처럼 링크하세요
+![구조도](../assets/architecture.png) -->
+
 
 ## 컴포넌트
 
