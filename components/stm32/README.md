@@ -1,24 +1,10 @@
-# STM32
+# STM32 펌웨어
 
-A.D.T.S 펌웨어 (`adts`) — 2축 스텝 구동, 라이다 스캔, RPi와의 UART 링크.
+STM32F401RE 펌웨어(`adts`) 관련 문서를 둡니다.
 
-- **담당**:
-- **코드**: `STM32/`
-
-## 문서
-
-| 문서 | 내용 |
+| 문서 | 담당 |
 |---|---|
-| [overview.md](overview.md) | 펌웨어 전체 구조와 빌드 |
-| [motor-ramp.md](motor-ramp.md) | 속도 프로파일, 램프 산수, 타이머 시간축, ISR 연결 |
-| [sensors/](sensors/) | 센서별 문서 (1인 1파일) — [라이다](sensors/lidar.md) · 엔코더 |
+| [sensors/lidar.md](sensors/lidar.md) — 라이다 수신 드라이버 | 송영빈 |
+| [motor-ramp.md](motor-ramp.md) — 가감속 램프 | 송영빈 |
 
-## 관련 인터페이스
-
-- [STM32 ↔ RPI UART 프로토콜](../../interfaces/stm32-rpi-uart.md) — 프레임 구조와 명령 개요
-
-> 통신 규격의 진실 소스는 `shared/protocol.h`입니다. **여기에 값을 복사하지 마세요.**
-
-## 관련 가이드
-
-- [정적분석](../../guides/stm32-static-analysis.md)
+`App/` 모듈 단위로 파일을 나누고, 새 문서를 추가하면 위 표에 한 줄 추가하세요.

@@ -1,72 +1,51 @@
 # docs
 
-A.D.T.S — VEDA 4th Oppenheimer 팀 문서 저장소입니다.
+A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 캘리브레이션 킷의
+팀 문서 저장소입니다.
 
-천장에 거치한 2축 Pan-Tilt 유닛이 1D 라이다를 회전시켜 실내를 훑고, 구면 격자 형태의
-3D 포인트클라우드를 만듭니다. 이 포인트클라우드가 Edge AI CCTV의 2D 영상과 매칭되어
-**마커리스 외부 캘리브레이션**의 입력이 됩니다.
+## 어디에 무엇을 두나
 
-각 문서는 **그 문서만 읽고도 이해되도록** 쓰여 있습니다. 필요한 배경은 문서 안에
-들어 있으니, 관심 있는 것부터 바로 여시면 됩니다.
-
-## 전체 구조
-
-| 문서 | 내용 |
+| 폴더 | 넣을 것 |
 |---|---|
-| [overview/architecture.md](overview/architecture.md) | 2축 스캐너 전체 동작 명세 — 핀맵, 부품 사양, 기구각/계약각, 격자 설계, 모터 제어, 라이다 각도 동기, 엔코더 운용, 계층 구조, 동작 시퀀스 |
+| [overview/](overview/) | 시스템 아키텍처, 요구사항 — 파트를 가리지 않는 문서 |
+| [interfaces/](interfaces/) | 여러 파트가 함께 지키는 계약 (MQTT 토픽, 산출물 포맷, UART 프로토콜, mTLS) |
+| [components/stm32/](components/stm32/) | STM32 펌웨어 |
+| [components/rpi/](components/rpi/) | 커널 드라이버 · 통합 데몬 · 브로커 |
+| [components/qt/](components/qt/) | Qt 관제 콘솔 |
+| [components/calibration/](components/calibration/) | 자동 캘리브레이션 (알고리즘·논문 조사) |
+| [guides/](guides/) | 환경 설정, 빌드, 배포 절차 |
+| [decisions/](decisions/) | 기술 결정 기록 (ADR) |
+| [meetings/](meetings/) | 회의록 |
 
-## 인터페이스 — 여러 파트가 함께 지키는 계약
+## 작성 규칙
 
-바꾸려면 양쪽 합의가 필요한 문서들입니다. 구현 전에 확인하세요.
+**한 문서는 그것만 읽고도 이해돼야 합니다.** 필요한 배경은 문서 안에 쓰고, 다른 문서나
+외부 위키로 넘기지 마세요 — 읽는 사람이 그 링크를 못 열 수 있습니다.
 
-| 문서 | 경계 |
-|---|---|
-| [interfaces/mqtt-topic-contract.md](interfaces/mqtt-topic-contract.md) | Qt 관제 ↔ RPi 데몬 — 토픽, 페이로드, 오류 코드, 상태머신, mTLS |
-| [interfaces/scan-output-format.md](interfaces/scan-output-format.md) | 데몬 → Qt·캘리브레이션 — `.json`/`.pcd` 전 필드 레퍼런스 |
-| [interfaces/stm32-rpi-uart.md](interfaces/stm32-rpi-uart.md) | STM32 ↔ RPi — 프레임, CRC, payload, ioctl ABI |
-| [interfaces/qt-rpi-enroll-mtls.md](interfaces/qt-rpi-enroll-mtls.md) | 인증서 발급 서버 계약 |
+- 문서끼리 링크로 엮지 않는다. 목차는 이 README 하나면 충분하다
+- 파일명은 **소문자 + 하이픈**, 영문 (`stm32-rpi-uart.md`). 제목은 한글
+- 값(CMD 번호, 구조체 크기, 핀 번호)을 적을 때는 **기준 커밋과 날짜**를 함께 남긴다
+- 표·코드블록·mermaid 다이어그램을 적극적으로 쓴다. 줄글보다 읽기 쉽다
+- 폴더를 새로 만들면 `README.md`도 같이 만든다 (git은 빈 폴더를 추적하지 않는다)
 
-## STM32 펌웨어
+## 현재 있는 문서
 
-| 문서 | 내용 |
-|---|---|
-| [components/stm32/overview.md](components/stm32/overview.md) | 디렉토리 구조, 빌드·플래시, 정적분석, CODEOWNERS |
-| [components/stm32/motor-ramp.md](components/stm32/motor-ramp.md) | 사다리꼴 속도 프로파일 — 램프 산수, 타이머 시간축, ISR 삽입점 |
-| [components/stm32/sensors/lidar.md](components/stm32/sensors/lidar.md) | TOFSense-F2P 수신 드라이버 — 프레임 파싱, 각도 래치 |
+### STM32 펌웨어
 
-## Raspberry Pi
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [sensors/lidar.md](components/stm32/sensors/lidar.md) | TOFSense-F2 P 수신 드라이버 — NLink 프레임 파싱, ISR 각도 래치, SPSC 링버퍼 | 송영빈 |
+| [motor-ramp.md](components/stm32/motor-ramp.md) | 사다리꼴 속도 프로파일 — 램프 산수, 타이머 시간축, ISR 삽입점 | 송영빈 |
 
-| 문서 | 내용 |
-|---|---|
-| [components/rpi/overview.md](components/rpi/overview.md) | 드라이버·통합 데몬 전체, 브로커·인증서 구축, 발급 서비스 운영 |
-| [components/rpi/daemon-fsm.md](components/rpi/daemon-fsm.md) | 100ms tick, heartbeat, HOME, FSM 전이 |
-| [components/rpi/imu.md](components/rpi/imu.md) | ICM-20948 수평 기준 — 오버레이부터 데몬 모듈까지 |
-| [components/rpi/web.md](components/rpi/web.md) | `adts-web` 폰 브라우저용 관제 |
-| [components/rpi/report/02-4-grid-merge.md](components/rpi/report/02-4-grid-merge.md) | 기구각→계약각, organized grid, 셀 병합 알고리즘 |
+### Raspberry Pi
 
-## Qt 관제 콘솔
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [imu.md](components/rpi/imu.md) | ICM-20948 수평 기준 — DT 오버레이, 커널 드라이버, 데몬 모듈 | 송영빈 |
 
-| 문서 | 내용 |
-|---|---|
-| [components/qt/overview.md](components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT, 화면·조작, 포인트클라우드, 트러블슈팅 |
-| [components/qt/build-and-deploy.md](components/qt/build-and-deploy.md) | 의존성 설치, 빌드, 배포 패키징 |
+### Qt 관제 콘솔
 
-## 가이드
-
-| 문서 | 내용 |
-|---|---|
-| [guides/cross-compile-setup.md](guides/cross-compile-setup.md) | Ubuntu → RPi arm64 커널 모듈 크로스컴파일 |
-| [guides/rpi-kernel-build.md](guides/rpi-kernel-build.md) | 커널 버전 고정 & 빌드 환경 (`/dev/turret`) |
-| [guides/rpi-docker-build-env.md](guides/rpi-docker-build-env.md) | RPi 빌드환경 Docker — 맥 M4 + CLion |
-| [guides/stm32-static-analysis.md](guides/stm32-static-analysis.md) | 펌웨어 정적분석 (CI 게이트) |
-
-## 아직 작성 전
-
-- [overview/requirements.md](overview/requirements.md) — 요구사항
-- [decisions/](decisions/) — 기술 결정 기록(ADR) 템플릿
-- [meetings/](meetings/) — 회의록 템플릿
-- [components/yocto/](components/yocto/) · [components/opensdk/](components/opensdk/) · [components/calibration/](components/calibration/)
-
----
-
-문서를 추가하기 전에 [작성 규칙](CONTRIBUTING.md)을 읽어주세요.
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [overview.md](components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT, 화면·조작, 포인트클라우드, 트러블슈팅 | 송영빈 |
+| [build-and-deploy.md](components/qt/build-and-deploy.md) | 의존성 설치, 빌드, 배포 패키징 | 송영빈 |
