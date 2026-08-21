@@ -1,16 +1,12 @@
 # SPATIAL·VMS — Qt 관제 콘솔
 
-> **이 문서는 Confluence 붙여넣기용 원본이다.** 저장소 `docs/QT_CONSOLE_OVERVIEW.md`
-> 를 고치고 Confluence 에 다시 붙여넣는 순서로 관리한다 (Confluence 편집기에서
-> 직접 고치면 다음 갱신 때 덮어써진다).
-
 | 항목 | 값 |
 |---|---|
 | 저장소 | `VEDA-4th-Oppenheimer/QT` (`main`) |
 | 담당 | 송영빈 (Qt) |
-| 문서 갱신 | 2026-08-14 |
+| 문서 갱신 | 2026-08-21 (`e777e73` 기준) |
 | 실행 파일명 | `spatial_vms` / 배포명 `SPATIAL-VMS` |
-| 연관 계약 | `MQTT_INTERFACE_CONTRACT.md` v1.0 — RPi 저장소 `docs/` (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이광진 서명) |
+| 연관 계약 | MQTT 인터페이스 계약 (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이광진 서명). 아래 §4 에 이 문서가 의존하는 부분을 그대로 옮겨 적었다 |
 
 ---
 
@@ -99,7 +95,7 @@ RPi 한 대에서 포트 두 개를 쓴다는 점이 헷갈리기 쉽다.
 
 ### 4.1 실제로 오가는 토픽
 
-> ⚠️ **계약서 v1.0 은 `adts/kit1/...` 이지만 RPi 데몬 실구현에는 `kit1` 세그먼트가
+> ⚠️ **계약서는 `adts/kit1/...` 이지만 RPi 데몬 실구현에는 `kit1` 세그먼트가
 > 없다** (`daemon/modules/mqtt/mqtt_module.c`). 이 앱은 **실구현 쪽**에 맞췄다.
 > 계약서가 재확정되면 `src/MqttBridge.cpp` 상단 상수와 함께 고쳐야 한다.
 
@@ -162,10 +158,31 @@ Client ID 가 아니라 인증서 CN 으로 판정되므로(`use_identity_as_use
 
 | 구조체 | 출처 토픽 | 주요 필드 |
 |---|---|---|
-| `DaemonState` | `state/daemon` | state, online, link_alive, homed, scanning, cur_pan/tilt_ddeg, last_err, level{valid, roll, pitch} |
+| `DaemonState` | `state/daemon` | state, online, link_alive, homed, scanning, cur_pan/tilt_ddeg, last_err, **last_err_axis**, **diag{…}**, level{valid, roll, pitch} |
+| `StmDiag` | `state/daemon.diag` | valid, tx_fail, rx_ovf, enc_retry, lidar_drop, reject_busy |
 | `ScanResult` | `state/scan` | req_id, ok, pcd, points, stm_reported, ts *(+ 계약에만 있는 미수신 필드)* |
 | `ScanProgress` | `event/progress` | req_id, points, expected, percent |
-| `KitError` | `event/error` | req_id, code, name, msg, fatal |
+| `KitError` | `event/error` | req_id, code, name, msg, fatal, **axis** |
+
+**STM 진단 카운터 (`diag`, proto v6)** — STM32 가 `CMD_STATUS` 로 1초마다 올리는 부팅 이후
+누적값이고 65535 에서 포화한다.
+
+| 필드 | 0 이 아니면 |
+|---|---|
+| `tx_fail` | STM32 UART 송신 실패 — 상행 프레임이 유실돼 스캔 점 수가 실제보다 적을 수 있다 |
+| `rx_ovf` | 수신 링버퍼 오버플로 — **STM32 메인루프가 오래 막혔다** (256B = 하행 프레임 20개분) |
+| `enc_retry` | 엔코더 I2C 판독 재시도(양축 합). 계속 오르면 배선 접촉 의심 |
+| `lidar_drop` | 라이다 큐가 차서 버린 샘플. 격자에 빈 셀로 남는다 |
+| `reject_busy` | 진행 중이라 거절한 SCAN_START. 조작자가 중복으로 눌렀다는 뜻 |
+
+> **`valid=false` 는 "정상"이 아니라 "모른다"다.** STM32 에 구버전 펌웨어가 올라가 있어
+> `CMD_STATUS` 를 아예 안 보내거나 첫 주기가 아직 안 온 것이다. 0 을 그대로 초록불로
+> 그리면 안 된다 — `level.valid` 와 같은 함정이다.
+
+**축 표기 (`last_err_axis` / `KitError.axis`, proto v6)** — 0=축무관 / 1=팬 / 2=틸트 /
+3=양축. **비트 플래그라 3 은 "둘 다"** 라는 뜻이다. 데몬 자체 판정(100번대)은 항상 0 이다.
+`axisLabel()` 이 축무관일 때 빈 문자열을 돌려주므로 그대로 이어 붙여도 된다
+(`[3] STM_ERROR … (팬)` / `[100] ERR_DISARM …`).
 
 > **계약 §3.4 와 실구현의 차이** — `state/scan` 실구현은
 > `{req_id, ok, pcd, points, stm_reported, ts}` 만 보낸다. `session_id` / `scan_id` /
@@ -176,16 +193,52 @@ Client ID 가 아니라 인증서 CN 으로 판정되므로(`use_identity_as_use
 **IMU** — `state/daemon.level` 이 계약상 유일한 IMU 출처다(별도 `imu/level` 토픽 없음).
 `valid=false` 면 "아직 측정 없음"이므로 **값을 표시하지 않고 `N/A` 로 둔다.** 여기를
 잘못 만들면 데이터가 안 와도 roll=0/pitch=0 이 "정상 수평"으로 초록색 표시돼 킷이
-멀쩡해 보인다. 수평 허용 오차는 ±1.5° (튜닝 대상).
+멀쩡해 보인다.
 
-**오류 코드** — 1~6 은 STM32 `CMD_ERROR` 원본, 100/101 은 데몬이 링크단절/홈타임아웃을
-감지해 합성한 코드다. `fatal` 은 "하드웨어가 고장났나"가 아니라 **화면을 어떻게
-그릴까** 의 기준이다.
+**수평 허용 오차는 ±10.0°** 다(`ImuState::level(tolDeg=10.0)`). 원래는 캘리브레이션
+권장값(1~2°)을 따라 1.5° 였는데, 그러면 **데몬은 스캔을 정상적으로 도는데 화면에만
+"기울었다" 배너가 계속 떠서** 배너가 무의미해졌다. 브링업 동안은 데몬 게이트
+(`LEVEL_GATE_MAX_DEG`)와 같은 값으로 두고, 배너가 뜨면 실제로 스캔도 거부되는 상태이도록
+맞춘다.
+
+> 근본 원인은 Qt 가 아니다 — 킷이 실제로 3.6° 기울어 있는데 **그 자세를 IMU 설치각
+> 오프셋의 기준으로 잡아버린** 것이다. 거치를 바닥평면 기준으로 바로잡고 오프셋을 다시
+> 재면 데몬 쪽을 3.0° 이하로 조일 수 있고, 그때 여기도 같이 조여야 한다. **이 값은 데몬
+> 값과 항상 같이 움직인다** (2026-08-21, `e777e73`).
+
+**오류 코드** — `code` 로 **출처**가 갈린다. 100 미만은 STM32 가 `CMD_ERROR` 로 올린
+원본이고, 100 이상은 데몬 자신의 판정이다.
+
+| 코드 | 이름 | 뜻 |
+|---|---|---|
+| 1 | BAD_CRC | STM32: 프레임 CRC 불일치 |
+| 2 | BAD_LEN | STM32: 프레임 길이 이상 |
+| 3 | NOT_HOMED | STM32: 홈이 안 잡힌 상태에서 이동 요청 |
+| 4 | OUT_OF_RANGE | STM32: 요청 각도가 가동 범위 밖 |
+| 5 | STALL | STM32: 탈조 감지 |
+| 6 | LIDAR | STM32: 라이다 이상 |
+| 100 | ERR_DISARM | 데몬: 안전정지 |
+| 101 | HOME_TIMEOUT | 데몬: 홈 무응답으로 요청 취소 |
+| 102 | NOT_LEVEL | 데몬: 수평 게이트가 스캔을 거부 |
+| 103 | UPLOAD_FAIL | 데몬: 카메라 업로드 실패 — **파일은 로컬에 남는다** |
+| 104 | BAD_REQUEST | 데몬: `cmd` 페이로드 필드 누락/형식 오류 |
+| 105 | EXPORT_FAIL | 데몬: 산출물 기록 실패 — **측정값 복구 불가** |
+| 106 | BUSY | 데몬: 지금 상태에서 받을 수 없는 요청 |
+
+> 이 경계가 생기기 전에는 **4 하나가 세 뜻으로 쓰여서**, `code=4` 를 받고도 STM 이 거절한
+> 건지 데몬이 페이로드를 못 읽은 건지 구분할 수 없었다. 103 과 105 를 가른 것도 같은
+> 이유다 — 103 은 파일이 남지만 105 는 측정값 자체가 없다.
+
+`name` 은 STM 오류면 항상 `"STM_ERROR"`(코드별 세부 이름이 아니다)로 오고, 데몬 판정이면
+`"ERR_NOT_LEVEL"` 처럼 구체적으로 온다. 화면에 코드를 같이 찍어야 하는 이유다.
+
+`fatal` 은 데몬이 실제로 채운다(2026-08-12). 정의가 "하드웨어가 고장났나"가 아니라
+**화면을 어떻게 그릴까** 의 기준이라는 점에 유의.
 
 | `fatal` | 의미 | 해당 코드 |
 |---|---|---|
-| `true` | 작업이 멈췄고 사용자가 개입해야 한다 — 배너·모달 | 3 NOT_HOMED / 5 STALL / 6 LIDAR / 100 안전정지 |
-| `false` | 로그 한 줄이면 된다. 재시도로 넘어간다 | 1 BAD_CRC / 2 BAD_LEN / 4 OUT_OF_RANGE |
+| `true` | 작업이 멈췄고 사용자가 개입해야 한다 — 배너·모달 | 3 NOT_HOMED / 5 STALL / 6 LIDAR / 100 안전정지 / 101 홈 타임아웃 / 102 수평 NG / 105 산출 실패 |
+| `false` | 로그 한 줄이면 된다. 계속되거나 다시 시도하면 된다 | 1 BAD_CRC / 2 BAD_LEN / 4 OUT_OF_RANGE |
 
 ### 4.4 REARM — 계약 외 확장
 
@@ -226,7 +279,7 @@ Client ID 가 아니라 인증서 CN 으로 판정되므로(`use_identity_as_use
 내려간다. 그래서 다음 스캔 전에 REARM 을 한 번 눌러야 한다. 유예 중에 새 스캔/홈을
 요청하면 예약은 취소된다.
 
-### 5.2 탭 4개
+### 5.2 탭 5개
 
 **① 메인 대시보드**
 
@@ -251,9 +304,21 @@ SESSION LOG + PROGRESS(`event/progress`) + LAST SCAN RESULT(`state/scan`).
 **④ EVENT LOG** — 모든 로그(`logLine` 시그널)를 TIME / TAG / SOURCE / MESSAGE 로
 시간순 표시. 태그별 색상 배지.
 
+**⑤ SETTINGS** — 테마 전환, Demo Mode, 카메라 설정·재접속, TOP-VIEW 전체화면, 센서 높이,
+스캔 파일 열기, 로그아웃.
+
+`모드`·`테마` 메뉴에 흩어져 있던 것을 성격별로 묶어 한 화면에 모았다. 메뉴는 항목이
+늘수록 찾기 어렵고 **현재 값(센서 높이, 카메라 IP)을 보여줄 수 없다** — 값과 조작을 같이
+두려고 탭으로 옮겼다. 메뉴 항목은 그대로 남아 있어 둘 중 아무 쪽으로나 해도 된다.
+
+> 이 위젯은 **상태를 갖지 않는다.** 테마를 바꾸면 `MainWindow::rebuildUi` 가 중앙 위젯을
+> 통째로 다시 만들기 때문에, 생성 시점의 값을 받아 표시만 하고 조작은 전부 시그널로
+> 넘긴다. 값이 바뀔 때는 탭을 다시 만들지 않고 `setSensorHeight` / `setCameraSummary` /
+> `setTopViewDetached` / `setDemoMode` 로 표시만 갱신한다.
+
 ### 5.3 경고 배너 (TiltBanner)
 
-IMU 가 허용 오차(±1.5°)를 벗어나면 상단에 빨간 배너가 뜬다. 수평으로 돌아오면 자동으로
+IMU 가 허용 오차(±10.0°, §4.3)를 벗어나면 상단에 빨간 배너가 뜬다. 수평으로 돌아오면 자동으로
 사라지고, `DISMISS` 로 닫을 수도 있다. 수평 이탈이 **시작될 때만** EVENT LOG 에
 한 줄 남긴다(계속 뜨는 동안 로그를 도배하지 않게).
 
@@ -310,9 +375,14 @@ Top-View 는 `+x 오른쪽 / +y 북` 이라 평면 투영은 `(x, z)` 를 그대
 점 색은 높이 기준(낮음=짙은 청색, 높음=밝은 난색)이며, 상태색(Ok/Warn/Danger)과
 일부러 다른 계열을 쓴다 — "초록 점 = 정상"으로 읽히면 안 되기 때문이다.
 
-**센서 높이** — `모드 → 센서 높이 설정…` (미터로 입력, mm 로 저장). 좌표 계산에는
-들어가지 않고 `.pcd` 헤더의 `sensor_height_m` 주석으로만 실린다. 소비자가 바닥평면을
-잡거나 다른 좌표계로 옮길 때 쓴다. `0` 은 "모름".
+**센서 높이** — `모드 → 센서 높이 설정…` 또는 SETTINGS 탭 (미터로 입력, mm 로 저장,
+`QSettings` 에 남아 재실행해도 유지된다). 좌표 계산에는 들어가지 않고 `.pcd` 헤더의
+`sensor_height_m` 주석으로만 실린다. 소비자가 바닥평면을 잡거나 다른 좌표계로 옮길 때
+쓴다. `0` 은 "모름".
+
+기본값은 **1805mm** 다. 도면상 값을 쓰다가 실측(퍼짐 12mm)으로 바꾼 것이고 **600mm
+차이가 났다.** 좌표에는 안 들어가지만 카메라 단이 이 값을 쓰므로 기본값을 실측으로
+맞춰뒀다.
 
 ---
 
@@ -527,7 +597,7 @@ mosquitto_sub -h <RPi IP> -p 8883 \
 
 ```
 src/
-├── main.cpp / MainWindow      # 4탭 셸, 시그널 배선, Demo/Live 전환, 메뉴(카메라·센서높이·로그아웃)
+├── main.cpp / MainWindow      # 5탭 셸, 시그널 배선, Demo/Live 전환, 메뉴(카메라·센서높이·로그아웃)
 ├── ConfigPath.h               # 설정 파일 탐색 (개발 트리 → 사용자 데이터 디렉터리)
 ├── CameraConfig.h             # PNM 시리즈 RTSP URL 조립 (센서 0~3 → CH1~4)
 ├── EnrollDialog               # 최초 실행 등록 마법사 (1회용 토큰 → 인증서·설정 발급)
@@ -537,7 +607,7 @@ src/
 ├── ScanFetcher / ScanCloud / ScanView3D     # .pcd 수신 · PCD 파서 · OpenGL 3D 뷰
 ├── TopBar / TiltBanner / StatusBar          # 상단 명령바 / 수평이탈 배너 / 하단 상태바
 ├── CameraTile / TopViewWidget / TopViewPanel # 대시보드 좌(CCTV) / 우(Top-View)
-└── CalibrationTab / DevicesTab / EventLogTab # 나머지 3개 탭
+└── CalibrationTab / DevicesTab / EventLogTab / SettingsTab # 나머지 4개 탭
 
 config/   cameras.example.json · mqtt.example.json   (실제 파일은 gitignore)
 certs/    개발용 인증서 — 통째로 gitignore
@@ -564,12 +634,13 @@ scans/    개발 중 받아둔 .pcd — gitignore
 
 ---
 
-## 13. 참고 문서
+## 13. 이 문서가 따르는 것
 
-1. **`MQTT_INTERFACE_CONTRACT.md` v1.0** (RPi 저장소 `docs/`) — 이 앱의 MQTT 부분은
-   전적으로 이 문서를 따른다. 토픽/페이로드/QoS/retain 을 바꾸려면 이 문서를 먼저 고쳐야
-   한다. (단, 위 §4.1·§4.3 의 실구현 차이는 예외로 명시)
-2. **Device 파트 아키텍처 및 역할 분담 V2** (Confluence) — 전체 시스템 아키텍처, RTSP 경로
-3. **01/02. Point Cloud 생성 · Camera Automatic Calibration 계획** (Confluence) — 카메라 단
-   캘리브 결과 스키마. 이 MQTT 계약과는 별개이며 발행 토픽 미정(§12)
-4. 저장소 `README.md` — 빌드·패키징 세부 절차, 명령어 수준의 상세
+- **MQTT 인터페이스 계약** (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이광진 서명) — 이 앱의
+  MQTT 부분은 전적으로 이 계약을 따른다. 토픽·페이로드·QoS·retain 을 바꾸려면 계약을 먼저
+  고쳐야 한다. **이 문서가 의존하는 부분은 §4.1·§4.3 에 값째로 옮겨 적었고, 실구현이 계약과
+  다른 두 지점(`kit_id` 세그먼트 없음 / `state/scan` 필드 부족)도 거기 명시했다.**
+- **`shared/protocol.h` v6** — STM32 가 올리는 오류 코드(1~6), 오류 축 비트, `CMD_STATUS`
+  진단 카운터의 출처. Qt 는 데몬을 거쳐 받으므로 직접 읽지는 않는다.
+- **카메라 단 캘리브 결과 스키마** — 이 MQTT 계약과는 별개다. 발행 토픽이 아직 정해지지
+  않았고, 정해지면 CALIBRATION 탭에 QUALITY 패널을 붙인다(§12).

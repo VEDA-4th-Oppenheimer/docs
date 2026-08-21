@@ -2,9 +2,8 @@
 
 Hanwha Vision **PNM-C16083RVQ** 멀티센서 카메라 + **TOFSense-F2D** 1D LiDAR pan-tilt
 스캐너로 사람 표적 없이(targetless) camera-LiDAR 외부 파라미터(extrinsic)를 자동
-산출하는 킷의 Qt 데스크톱 관제 UI. **Qt 담당: 송영빈** — RPi 데몬과의 통신은
-`MQTT_INTERFACE_CONTRACT.md` v1.0(RPi 저장소 `docs/`, 데몬=이현우/브로커·인증서=이광진
-서명)을 그대로 구현한다.
+산출하는 킷의 Qt 데스크톱 관제 UI. **Qt 담당: 송영빈** — RPi 데몬과의 통신은 MQTT
+인터페이스 계약(데몬=이현우 / 브로커·인증서=이광진 서명)을 그대로 구현한다.
 
 - **UI**: Qt6 Widgets, 다크 관제실 테마 (`src/Theme.h`)
 - **CCTV 영상**: RTSP 직접 연결(영상 자체는 MQTT 경유 아님). `src/RtspDecoder`가
@@ -28,16 +27,13 @@ Hanwha Vision **PNM-C16083RVQ** 멀티센서 카메라 + **TOFSense-F2D** 1D LiD
   등록되지 않은 상태로 앱을 띄우면 자동으로 이 모드로 들어간다.
   RTSP는 이 토글과 무관하게 카메라 설정이 있으면 항상 동작한다.
 
-## 참고 문서
+## 이 문서가 따르는 것
 
-1. `MQTT_INTERFACE_CONTRACT.md` v1.0 (RPi 저장소 `docs/`) — **이 앱의 MQTT 부분은
-   전적으로 이 문서를 따른다.** 토픽/페이로드/QoS/retain 을 바꾸려면 이 문서를 먼저
-   고쳐야 한다.
-2. *Device 파트 아키텍처 및 역할 분담 V2* (Confluence) — 전체 시스템 아키텍처, RTSP 경로 확인용.
-3. *01/02. Point Cloud 생성·Camera Automatic Calibration 계획* (Confluence) — 카메라
-   단 캘리브 결과(NCC/edge_rmse/extrinsic) 스키마. **이 MQTT 계약과는 별개**이며
-   발행 토픽이 아직 정해지지 않았다(계약 §9 미결) — 그래서 이 Qt 앱은 캘리브
-   품질/RT 를 아직 표시하지 않는다.
+- **MQTT 인터페이스 계약** (데몬=이현우 / 브로커·인증서=이광진 서명) — 이 앱의 MQTT 부분은
+  전적으로 이 계약을 따른다. 토픽·페이로드·QoS·retain 을 바꾸려면 계약을 먼저 고쳐야 한다.
+- **카메라 단 캘리브 결과(NCC / edge_rmse / extrinsic) 스키마** — **이 MQTT 계약과는
+  별개**이며 발행 토픽이 아직 정해지지 않았다. 그래서 이 Qt 앱은 캘리브 품질과 RT 를 아직
+  표시하지 않는다.
 
 ## 의존성 설치 (macOS / Homebrew)
 
@@ -424,7 +420,7 @@ REARM 으로 바뀌어 `cmd/rearm` 을 발행한다.
 
 ## MQTT 토픽
 
-> ⚠️ 계약서 v1.0 은 토픽에 `kit1` 세그먼트를 넣지만, **RPi 데몬 실구현에는 없다**
+> ⚠️ 계약서는 토픽에 `kit1` 세그먼트를 넣지만, **RPi 데몬 실구현에는 없다**
 > (`daemon/modules/mqtt/mqtt_module.c`). 이 앱은 실구현 쪽에 맞췄다 — 아래가 실제로
 > 오가는 토픽이다. 계약서가 재확정되면 `src/MqttBridge.cpp` 상단 상수와 함께 고칠 것.
 
@@ -467,7 +463,7 @@ src/
 ├── RtspDecoder / RtspSource                # 채널별 RTSP 디코딩(FFmpeg) + config 로더
 ├── TopBar / TiltBanner / StatusBar        # 상단(HOME/SCAN/STOP/DISARM)/경고/하단 바
 ├── CameraTile / TopViewWidget / TopViewPanel  # 대시보드 좌(CCTV)/우(Top-View) 패널
-└── CalibrationTab / DevicesTab / EventLogTab   # 나머지 3개 탭
+└── CalibrationTab / DevicesTab / EventLogTab / SettingsTab   # 나머지 4개 탭
 
 config/
 ├── cameras.example.json / cameras.json   # RTSP — 후자는 gitignore
