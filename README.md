@@ -13,6 +13,8 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [components/rpi/](components/rpi/) | 커널 드라이버 · 통합 데몬 · 브로커 |
 | [components/qt/](components/qt/) | Qt 관제 콘솔 |
 | [components/calibration/](components/calibration/) | 자동 캘리브레이션 (알고리즘·논문 조사) |
+| [components/yocto/](components/yocto/) | Yocto 이미지 빌드 — 레시피, 레이어 구성 |
+| [components/opensdk/](components/opensdk/) | Edge AI 카메라 Open Platform SDK |
 | [guides/](guides/) | 환경 설정, 빌드, 배포 절차 |
 | [decisions/](decisions/) | 기술 결정 기록 (ADR) |
 | [meetings/](meetings/) | 회의록 |
