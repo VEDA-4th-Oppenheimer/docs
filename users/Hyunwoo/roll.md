@@ -5,7 +5,7 @@
 | 파트 | 맡은 것 | 저장소 위치 |
 |---|---|---|
 | 시스템·인터페이스 | Device 계층 아키텍처, Protocol v6, 스캔 산출물·MQTT·카메라 업로드 계약 | `docs` — `overview/`, `interfaces/` |
-| STM32 펌웨어 | RPi UART 프로토콜 어댑터, 2축 스캔 시퀀서 계층 분리·프로토콜 연계 | `STM32` — `App/uart_rpi/`, `App/scan/` (스캔 원 구현은 강유근) |
+| STM32 펌웨어 | RPi UART 프로토콜 어댑터, 2축 스캔 시퀀서 계층 분리·프로토콜 연계, 런타임 모듈 결선·오류 경로 | `STM32` — `App/uart_rpi/`, `App/scan/`, `Core/Src/main.c` (스캔·TIM 원 구현은 강유근) |
 | RPi 커널 드라이버 | STM32 serdev 연결, `/dev/turret` 스트림·ioctl ABI | `RPi` — `driver/turret_driver.c`, `shared/protocol.h` |
 | RPi 통합 데몬 | epoll FSM, heartbeat, `scan_output`, module ABI, MQTT module, 카메라 송신 client | `RPi` — `daemon/`, `shared/daemon_module.h` |
 | RPi 브로커 | Mosquitto 운영 설정과 CA·인증서 발급 script | `RPi` — `broker/` (송영빈과 공동) |
@@ -25,6 +25,7 @@
 | [카메라 업로드 계약](../../interfaces/camera-upload.md) | mTLS 신원, 파일 framing, 응답·재시도 계약 (이영민과 공동) |
 | [STM32 UART 어댑터](../../components/stm32/uart-rpi.md) | ISR ring buffer, frame parser, command dispatch, status·diagnostic 전송 |
 | [STM32 스캔 시퀀서](../../components/stm32/scan.md) | HOME, serpentine scan, stall 감시, LiDAR 연계 (강유근과 공동) |
+| [STM32 펌웨어 런타임](../../components/stm32/runtime.md) | 페리페럴·모듈 초기화, 협조적 main loop, UART·TIM callback과 IWDG 결선 (강유근·송영빈과 공동) |
 | [turret 커널 드라이버](../../components/rpi/driver/turret.md) | serdev parser, kfifo scan stream, poll·ioctl ABI, device lifetime |
 | [브로커 발급 서비스](../../components/rpi/broker-enroll.md) | Mosquitto 운영·CA script와 `/enroll` 발급·스캔 조회 경계 (송영빈과 공동) |
 | [데몬 코어](../../components/rpi/daemon/core.md) | 단일 epoll loop, FSM, heartbeat, scan lifetime과 shutdown 정책 |

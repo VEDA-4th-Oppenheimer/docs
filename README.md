@@ -45,6 +45,7 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [motor-ramp.md](components/stm32/motor-ramp.md) | 사다리꼴 속도 프로파일 — 램프 산수, 타이머 시간축, ISR 삽입점 | 송영빈 |
 | [uart-rpi.md](components/stm32/uart-rpi.md) | RPi 링크 프로토콜 어댑터 — 링버퍼, 프레임 파서, 1Hz STATUS, 진단 카운터 | 이현우 |
 | [scan.md](components/stm32/scan.md) | 2축 스캔 시퀀서 — 홈 확립, serpentine 스윕, 탈조 감시, 라이다 연계 | 이현우 / 강유근 |
+| [runtime.md](components/stm32/runtime.md) | 펌웨어 런타임 — 초기화 순서, 협조적 메인루프, HAL 콜백과 IWDG | 이현우 / 강유근 / 송영빈 |
 
 ### Raspberry Pi
 
