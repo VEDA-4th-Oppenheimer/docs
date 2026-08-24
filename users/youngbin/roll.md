@@ -18,4 +18,6 @@
 | [IMU 드라이버](../../components/rpi/driver/imu.md) | ICM-20948 레지스터 뱅크, MPU-6050 교체 이력, `/dev/imu` 계약, 브링업·진단 |
 | [발급 서비스](../../components/rpi/broker-enroll.md) | 1회용 토큰 수명주기, 인증서 서명 위임, ACL 자동 등록, 스캔 조회 3중 방어 |
 | [Qt 콘솔 개요](../../components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT 계약 구현, 화면·조작, 포인트클라우드, 트러블슈팅 |
-| [Qt 빌드·배포](../../components/qt/build-and-deploy.md) | 의존성, 등록 마법사, 설정 파일 탐색 순서, macOS·Windows 패키징 |
+| [Qt 빌드·배포](../../guides/qt-build-and-deploy.md) | 의존성, 등록 마법사, 설정 파일 탐색 순서, macOS·Windows 패키징 |
+| [등록·발급 계약](../../interfaces/qt-rpi-enroll.md) | `POST /enroll`, 스캔 조회, TLS 요구사항, 인증서 형식, ACL 등록 의무 |
+| [발급 토큰 운영](../../guides/broker-token-runbook.md) | 토큰 생성·회수, ACL 확인, 접속 끊기, 증상별 진단 |

@@ -8,3 +8,5 @@
 |---|---|---|
 | [rpi-daemon-build-and-deploy.md](rpi-daemon-build-and-deploy.md) | RPi 데몬 CMake, kernel build, systemd와 반복 스캔 배포 | 이현우 |
 | [yocto-build.md](yocto-build.md) | Yocto 이미지 빌드, SD 기록, 부팅 체크리스트 | 이현우 |
+| [qt-build-and-deploy.md](qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 | 송영빈 |
+| [broker-token-runbook.md](broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 증상별 진단 | 송영빈 |

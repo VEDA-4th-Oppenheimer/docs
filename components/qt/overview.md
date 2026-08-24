@@ -434,7 +434,7 @@ POST https://<host>:8443/enroll
      "mqtt":{"host":"...","port":8883},
      "cameras":{"channels":{"1":"rtsp://...", ...}}}
 
-401/409 {"error":"사유"}
+400/401/404/500 {"error":"사유"}
 ```
 
 서버 신원은 실행파일에 박아둔 `resources/ca.crt` 로만 검증한다(시스템 CA 는 쓰지 않는다).

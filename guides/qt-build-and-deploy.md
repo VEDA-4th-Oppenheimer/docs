@@ -1,9 +1,25 @@
-# SPATIAL·VMS — ADTS 1D LiDAR Pan-Tilt 스캐너 킷 Qt 관제 (VEDA-4th-Oppenheimer)
+# Qt 관제 콘솔 빌드와 배포
+
+SPATIAL·VMS(Qt 데스크톱 관제 UI)를 빌드하고, 등록해서 실제 킷에 붙이고, 배포본으로
+패키징하는 절차를 정리한다.
+
+| 항목 | 값 |
+|---|---|
+| 문서 ID | `ADTS-QTC-80` |
+| 담당 | 송영빈 |
+| 기준 코드 | QT `e777e73` (2026-08-21) |
+| 실행 파일명 | `spatial_vms` / 배포명 `SPATIAL-VMS` |
+| 빌드 | `CMakeLists.txt` (Qt6 Widgets + Paho MQTT C++ + FFmpeg) |
+| 패키징 | `scripts/package_macos.sh` · `scripts/package_windows.ps1` |
+| 등록 마법사 | `src/EnrollDialog` |
+
+---
+
+## 이 앱이 무엇인가
 
 Hanwha Vision **PNM-C16083RVQ** 멀티센서 카메라 + **TOFSense-F2D** 1D LiDAR pan-tilt
 스캐너로 사람 표적 없이(targetless) camera-LiDAR 외부 파라미터(extrinsic)를 자동
-산출하는 킷의 Qt 데스크톱 관제 UI. **Qt 담당: 송영빈** — RPi 데몬과의 통신은 MQTT
-인터페이스 계약(데몬=이현우 / 브로커·인증서=이광진 서명)을 그대로 구현한다.
+산출하는 킷의 Qt 데스크톱 관제 UI.
 
 - **UI**: Qt6 Widgets, 다크 관제실 테마 (`src/Theme.h`)
 - **CCTV 영상**: RTSP 직접 연결(영상 자체는 MQTT 경유 아님). `src/RtspDecoder`가
@@ -94,39 +110,16 @@ URL 은 `rtsp://<계정>:<비번>@<IP>:554/<0~3>/profile2/media.smp` 형태로 �
 앱을 닫는다. 다시 쓰려면 새 토큰을 발급받아야 한다. (이미 발급된 인증서 자체의
 무효화(CRL)는 아직 없다 — 기기 분실 대응이 필요하면 브로커에 CRL 을 걸어야 한다)
 
-### 발급 서버 계약
-
-RPi 쪽 발급 서비스가 지켜야 하는 형식. 클라이언트는 이대로 구현돼 있다.
-
-```
-POST https://<host>:<port>/enroll
-    {"token": "...", "device_name": "..."}
-
-200 {"cn":"qt-console-<사용자>",
-     "ca_crt":"-----BEGIN CERTIFICATE-----\n...",
-     "client_crt":"-----BEGIN CERTIFICATE-----\n...",
-     "client_key":"-----BEGIN RSA PRIVATE KEY-----\n...",
-     "mqtt":{"host":"...","port":8883},
-     "cameras":{"channels":{"1":"rtsp://...", ...}}}
-
-401/409 {"error":"사유"}
-```
+### 발급 서버 쪽 전제
 
 서버 신원은 실행파일에 박아둔 `resources/ca.crt` 로만 검증한다(시스템 CA 는 쓰지
 않는다). 발급 시점에는 아직 클라이언트 인증서가 없어 검증 근거가 이것뿐이다.
-`ca.crt` 는 **공개** 인증서라 배포본에 들어가도 안전하다 — CA 를 재발급하면 이
-파일도 같이 갱신해야 한다.
+`ca.crt` 는 **공개** 인증서라 배포본에 들어가도 안전한데, **CA 를 재발급하면 이 파일도
+같이 갱신**해야 한다 — 안 하면 기존 배포본은 새 서버를 영영 신뢰하지 못한다.
 
-서버 구현 시 놓치기 쉬운 것:
-
-- **발급할 때마다 브로커 ACL 에 CN 을 추가**해야 한다. mosquitto ACL 은
-  `user <CN>` 정확 매칭이라 와일드카드가 없다. 빠뜨리면 인증서는 정상인데
-  구독·발행이 조용히 막힌다.
-- 인증서 서명에 **`-extensions v3_client`** 를 붙인다. 빠지면 mTLS 핸드셰이크에서
-  거부된다.
-- 클라이언트 키는 **전통 RSA 포맷**으로 내려준다. PKCS#8 이면 `QSslKey` 가 null 을
-  반환하고 조용히 실패한다.
-- 서버 인증서는 기존 `server.crt` 를 재사용할 수 있다 — SAN 에 IP 가 들어 있다.
+요청·응답 형식과 서버가 지켜야 할 조건(`v3_client` 확장, 전통 RSA 키 포맷, 발급 후 ACL
+등록 의무, 오류 코드)은 `interfaces/` 의 **Qt ↔ RPi 등록·발급 계약** 문서가 정본이다.
+여기서는 클라이언트가 그 계약대로 구현돼 있다는 것만 밝혀둔다.
 
 ## B. 저장소에서 직접 빌드하는 경우 (개발자)
 

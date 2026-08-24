@@ -59,16 +59,18 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [stm32-rpi-uart.md](interfaces/stm32-rpi-uart.md) | Protocol v6 — 프레임, 명령·오류 코드, payload 구조체, 각도 규약 | 이현우 |
 | [scan-artifacts.md](interfaces/scan-artifacts.md) | 좌표계·격자와 산출물 — JSON schema 1.2 / organized PCD | 이현우 |
 | [camera-upload.md](interfaces/camera-upload.md) | 데몬→카메라 측정 JSON push — mTLS 신원·프레이밍·재시도 | 이현우 / 이영민 |
+| [qt-rpi-enroll.md](interfaces/qt-rpi-enroll.md) | Qt↔RPi 등록·발급 — `POST /enroll`, 스캔 조회, 인증서·ACL 요구조건 | 송영빈 |
 
 ### Qt 관제 콘솔
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [overview.md](components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT, 화면·조작, 포인트클라우드, 트러블슈팅 | 송영빈 |
-| [build-and-deploy.md](components/qt/build-and-deploy.md) | 의존성 설치, 빌드, 배포 패키징 | 송영빈 |
 
 ### 가이드
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [rpi-daemon-build-and-deploy.md](guides/rpi-daemon-build-and-deploy.md) | RPi 데몬 빌드·systemd·kernel module 설치와 반복 스캔 운영 | 이현우 |
+| [qt-build-and-deploy.md](guides/qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 (macOS/Windows) | 송영빈 |
+| [broker-token-runbook.md](guides/broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 접속 끊기, 증상별 진단 | 송영빈 |
