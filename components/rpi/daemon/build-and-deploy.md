@@ -6,7 +6,7 @@ RPi 통합 데몬을 빌드하고 커널 모듈·Device Tree overlay·systemd un
 | 항목 | 값 |
 |---|---|
 | 문서 ID | `ADTS-DMN-33` |
-| 기준 코드 | RPi `2f9b2c2` (2026-08-24) |
+| 기준 코드 | RPi `62f3d7b` (2026-08-24) |
 | 데몬 빌드 | `RPi/daemon/CMakeLists.txt` |
 | 서비스 | `RPi/daemon/adts-daemon.service` |
 | 설치 도구 | `RPi/daemon/tools/install-service.sh` |
@@ -298,13 +298,13 @@ pipeline의 `tee`가 아니라 `${PIPESTATUS[0]}`으로 daemon 종료 코드를 
 
 | 결과 | 판정 |
 |---|---|
-| 0 | scan output 기록 완료 |
-| 1 등 일반 오류 | home·수평 gate·산출물 기록 등의 실패 |
+| 0 | `--once`가 EXPORT 뒤 정상 종료 |
+| 1 등 일반 오류 | home·수평 gate 등 scan request 취소 |
 | 124 또는 137 | timeout 또는 timeout 뒤 강제 종료 |
 | Ctrl-C | 종료 코드보다 `ABORT` flag를 우선해 중단 처리 |
 
-현재 코어는 `--once`에서 JSON 또는 PCD 기록이 실패하면 `scan_failed`를 설정한다. 따라서
-`scan_batch.sh`의 성공 집계와 `result.valid`가 같은 산출 완료 조건을 사용한다.
+PCD 경로와 유효 셀 수는 log에서 추출해 summary에 기록하지만 성공 판정에는 사용하지
+않는다.
 
 GNU `timeout`이 있으면 먼저 SIGINT를 보내고 20초 뒤에도 종료하지 않은 process를
 강제 종료한다. `STOP` 파일은 진행 중인 회차를 마친 뒤 다음 회차 전에 중단한다.
@@ -341,7 +341,7 @@ binary를 바꾼 경우에만 각각 `daemon-reload` 또는 재설치를 수행�
 
 ## 검증 기준선
 
-2026-08-24 ARM64 Linux build container에서 RPi `2f9b2c2`를 검증했다.
+2026-08-24 ARM64 Linux build container에서 RPi `62f3d7b`를 검증했다.
 
 | 항목 | 결과 |
 |---|---|
@@ -350,7 +350,6 @@ binary를 바꾼 경우에만 각각 `daemon-reload` 또는 재설치를 수행�
 | cppcheck 2.13, daemon 6개 translation unit | 통과 |
 | `install-service.sh`, `scan_batch.sh` `bash -n` | 통과 |
 | unit 환경·경로와 module 설정의 source 대조 | 일치 |
-| `--once` 산출 실패와 batch 종료 코드 연결 | `scan_failed` 경로 확인 |
 
 실기 배포에서는 여기에 device node, module vermagic, boot overlay, service account 인증서
 가독성, JSON·PCD 생성까지 확인해야 배포 완료로 판정한다.
