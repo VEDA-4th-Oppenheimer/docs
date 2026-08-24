@@ -5,7 +5,7 @@
 | 경계 | 문서 |
 |---|---|
 | Qt 관제 ↔ RPi 데몬 (MQTT 토픽) | *작성 전* |
-| 데몬 → Qt·캘리브레이션 (스캔 산출물 포맷) | *작성 전* |
+| 데몬 → Qt·캘리브레이션 (스캔 산출물) | [scan-artifacts.md](scan-artifacts.md) — 이현우 |
 | STM32 ↔ RPi (UART 프로토콜) | [stm32-rpi-uart.md](stm32-rpi-uart.md) — 이현우 |
 | 인증서 발급 서버 (mTLS) | *작성 전* |
 
