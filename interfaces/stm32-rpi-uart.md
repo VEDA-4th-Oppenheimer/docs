@@ -465,36 +465,7 @@ enum 정의와 실제 dispatch 동작을 구분해야 한다.
 
 ---
 
-## 6. 검증
-
-| 항목 | 방법 | 등급 | 결과 |
-|---|---|---|---|
-| 사본 동일성 | `shasum -a 256` | B | canonical 두 사본 일치, `657b8c88…e689e7` |
-| 기준선 변화 | `git diff` | B | RPi `f51ba0f..2a683ee`, STM32 `c5c1c67..bd53921`에서 헤더 변경 없음 |
-| 구조체 크기 | 컴파일타임 assert 8종 | B | RPi 유저 헤더와 STM32 host/ARM `-fsyntax-only` 통과; 커널 모듈은 이번 재검증에서 미빌드 |
-| CRC 상호운용 | 2026-08-19 산출물 | A | 드라이버를 통과한 52,794프레임이 데몬 히스토그램에 집계됨 |
-| CRC 오류율 | 드라이버·JSON 진단 | D | 드라이버 CRC 실패 카운터가 없고 JSON 값은 0 고정이라 측정 불가 |
-| v6 `CMD_STATUS` | 드라이버 캐시 → MQTT `diag` | C | 관찰 기록은 있으나 원본 상태 로그 미보존 |
-| v6 error axis | 홈 실패 유도 | C | 브링업 사건 서술만 있고 회귀 시험·원본 프레임 없음 |
-
----
-
-## 7. 알려진 이슈
-
-| ID | 항목 | P | 조치 방향 |
-|---|---|---|---|
-| PRT-01 | `point_count` 가 유저 공간에 미노출 | 0 | `turret_link_state` 에 `last_done_point_count` 추가. 드라이버·데몬 동시 릴리스 |
-| PRT-02 | `ERR_BAD_CRC`/`ERR_BAD_LEN` 미송신 | 0 | 최소한 거절 카운터를 `proto_status` 에 추가 |
-| PRT-03 | zero-payload 명령 길이 미검증 | 1 | `HOME`/`STOP`/`DISARM`/`PING` 은 `LEN==0` 강제, `SCAN_START` 는 정확한 크기만 |
-| PRT-04 | 헤더의 엔코더 재영점·STATUS 틸트 각도원 주석이 구현과 불일치 | 1 | Monitor-Only·스텝카운트로 정정 |
-| PRT-05 | 세션/generation 식별자 부재 | 2 | 이전 스캔 tail 프레임을 완전히 구분 불가. 현재는 FIFO 리셋 + 각도 범위로 차단 |
-| PRT-06 | stale 사본 2개 잔존 | 2 | 루트 v3, `motor/STM32/shared/` 불일치본 정리 또는 archive |
-| PRT-07 | `ERR_LIDAR` 정의에 발화 경로 없음 | 2 | 미사용 계약이면 제거, 사용할 경우 발생 조건과 축 정책 구현 |
-| PRT-08 | CRC 실패·FIFO drop 누적 카운터 없음 | 1 | 드라이버 상태 ABI와 산출물 진단에 실제 계측값 노출 |
-
----
-
-## 8. 참고
+## 6. 참고
 
 - 소스: `RPi/shared/protocol.h` (canonical), `STM32/shared/protocol.h`
 - CI: `STM32/.github/workflows/protocol-sync-check.yml`
