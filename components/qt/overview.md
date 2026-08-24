@@ -6,7 +6,7 @@
 | 담당 | 송영빈 (Qt) |
 | 문서 갱신 | 2026-08-21 (`e777e73` 기준) |
 | 실행 파일명 | `spatial_vms` / 배포명 `SPATIAL-VMS` |
-| 연관 계약 | MQTT 인터페이스 계약 (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이광진 서명). 아래 §4 에 이 문서가 의존하는 부분을 그대로 옮겨 적었다 |
+| 연관 계약 | MQTT 인터페이스 계약 (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이현우·송영빈). 아래 §4 에 이 문서가 의존하는 부분을 그대로 옮겨 적었다 |
 
 ---
 
@@ -298,7 +298,7 @@ Client ID 가 아니라 인증서 CN 으로 판정되므로(`use_identity_as_use
 SESSION LOG + PROGRESS(`event/progress`) + LAST SCAN RESULT(`state/scan`).
 실구현이 아직 안 보내는 필드는 `—` 로 뜬다.
 
-**③ DEVICES / MQTT** — 장비 카드 4개(IMU / TOFSense-F2D / STM32+DRV8825 / RPi4B) +
+**③ DEVICES / MQTT** — 장비 카드 4개(IMU / TOFSense-F2 P / STM32+DRV8825 / RPi4B) +
 `adts/...` 토픽 9개 테이블(RATE·방향·retain 여부).
 
 **④ EVENT LOG** — 모든 로그(`logLine` 시그널)를 TIME / TAG / SOURCE / MESSAGE 로
@@ -636,7 +636,7 @@ scans/    개발 중 받아둔 .pcd — gitignore
 
 ## 13. 이 문서가 따르는 것
 
-- **MQTT 인터페이스 계약** (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이광진 서명) — 이 앱의
+- **MQTT 인터페이스 계약** (데몬=이현우 / Qt=송영빈 / 브로커·인증서=이현우·송영빈) — 이 앱의
   MQTT 부분은 전적으로 이 계약을 따른다. 토픽·페이로드·QoS·retain 을 바꾸려면 계약을 먼저
   고쳐야 한다. **이 문서가 의존하는 부분은 §4.1·§4.3 에 값째로 옮겨 적었고, 실구현이 계약과
   다른 두 지점(`kit_id` 세그먼트 없음 / `state/scan` 필드 부족)도 거기 명시했다.**

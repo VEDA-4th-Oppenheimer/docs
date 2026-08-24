@@ -17,7 +17,7 @@ SPATIAL·VMS(Qt 데스크톱 관제 UI)를 빌드하고, 등록해서 실제 킷
 
 ## 이 앱이 무엇인가
 
-Hanwha Vision **PNM-C16083RVQ** 멀티센서 카메라 + **TOFSense-F2D** 1D LiDAR pan-tilt
+Hanwha Vision **PNM-C16083RVQ** 멀티센서 카메라 + **TOFSense-F2 P** 1D LiDAR pan-tilt
 스캐너로 사람 표적 없이(targetless) camera-LiDAR 외부 파라미터(extrinsic)를 자동
 산출하는 킷의 Qt 데스크톱 관제 UI.
 
@@ -45,7 +45,7 @@ Hanwha Vision **PNM-C16083RVQ** 멀티센서 카메라 + **TOFSense-F2D** 1D LiD
 
 ## 이 문서가 따르는 것
 
-- **MQTT 인터페이스 계약** (데몬=이현우 / 브로커·인증서=이광진 서명) — 이 앱의 MQTT 부분은
+- **MQTT 인터페이스 계약** (데몬=이현우 / 브로커·인증서=이현우·송영빈) — 이 앱의 MQTT 부분은
   전적으로 이 계약을 따른다. 토픽·페이로드·QoS·retain 을 바꾸려면 계약을 먼저 고쳐야 한다.
 - **카메라 단 캘리브 결과(NCC / edge_rmse / extrinsic) 스키마** — **이 MQTT 계약과는
   별개**이며 발행 토픽이 아직 정해지지 않았다. 그래서 이 Qt 앱은 캘리브 품질과 RT 를 아직

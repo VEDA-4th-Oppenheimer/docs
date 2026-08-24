@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |---|---|
 | 문서 ID | `ADTS-ENR-50` |
-| 담당 | 송영빈 (Qt 클라이언트 · 발급 서버) / 이현우 · 이광진 (CA · 브로커 운영) |
+| 담당 | 송영빈 (Qt 클라이언트 · 발급 서버) / 이현우 (브로커 운영 · CA 스크립트) |
 | 대상 소스 | `RPi/broker/enroll_service.c` · `QT/src/EnrollDialog` · `QT/src/ScanFetcher` |
 | 기준 코드 | RPi `2a683ee` (2026-08-21) / QT `e777e73` (2026-08-21) |
 | 경계 | Qt 관제 콘솔 ↔ RPi 발급 서비스 (`adts_enroll`) |
