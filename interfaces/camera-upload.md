@@ -5,6 +5,7 @@ RPi 데몬이 스캔 완료 후 카메라 애플리케이션으로 organized 측
 
 | 항목 | 값 |
 |---|---|
+| 담당 | 이현우(RPi 송신 client) / 이영민(카메라 app TCP server) |
 | 기준 구현 | RPi `2f58d6e` (2026-08-24) |
 | 전송 | TCP 2222 위 mTLS |
 | 최소 TLS 버전 | TLS 1.2 |

@@ -58,7 +58,7 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 |---|---|---|
 | [stm32-rpi-uart.md](interfaces/stm32-rpi-uart.md) | Protocol v6 — 프레임, 명령·오류 코드, payload 구조체, 각도 규약 | 이현우 |
 | [scan-artifacts.md](interfaces/scan-artifacts.md) | 좌표계·격자와 산출물 — JSON schema 1.2 / organized PCD | 이현우 |
-| [camera-upload.md](interfaces/camera-upload.md) | 데몬→카메라 측정 JSON push — mTLS 신원·프레이밍·재시도 | 이현우 |
+| [camera-upload.md](interfaces/camera-upload.md) | 데몬→카메라 측정 JSON push — mTLS 신원·프레이밍·재시도 | 이현우 / 이영민 |
 
 ### Qt 관제 콘솔
 
