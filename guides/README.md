@@ -4,4 +4,6 @@
 
 파일명은 `<컴포넌트>-<주제>.md` 형식으로 (예: `rpi-kernel-build.md`).
 
-*아직 문서 없음*
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [rpi-daemon-build-and-deploy.md](rpi-daemon-build-and-deploy.md) | RPi 데몬 CMake, kernel build, systemd와 반복 스캔 배포 | 이현우 |

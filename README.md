@@ -51,7 +51,6 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [daemon/modules.md](components/rpi/daemon/modules.md) | 정적 모듈 계약 v5와 공유 상태 소유권 | 이현우 |
 | [daemon/scan-output.md](components/rpi/daemon/scan-output.md) | 스캔 산출물 생성기 — 격자 병합, JSON·PCD writer와 실패 전파 | 이현우 |
 | [daemon/camera.md](components/rpi/daemon/camera.md) | 카메라 mTLS 송신 — 설정 재로드, 재시도와 heartbeat 경계 | 이현우 |
-| [daemon/build-and-deploy.md](components/rpi/daemon/build-and-deploy.md) | 데몬 빌드·systemd·kernel module 설치와 반복 스캔 운영 | 이현우 |
 
 ### 인터페이스 계약
 
@@ -67,3 +66,9 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 |---|---|---|
 | [overview.md](components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT, 화면·조작, 포인트클라우드, 트러블슈팅 | 송영빈 |
 | [build-and-deploy.md](components/qt/build-and-deploy.md) | 의존성 설치, 빌드, 배포 패키징 | 송영빈 |
+
+### 가이드
+
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [rpi-daemon-build-and-deploy.md](guides/rpi-daemon-build-and-deploy.md) | RPi 데몬 빌드·systemd·kernel module 설치와 반복 스캔 운영 | 이현우 |
