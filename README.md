@@ -31,6 +31,12 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 
 ## 현재 있는 문서
 
+### 전체 그림
+
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [architecture.md](overview/architecture.md) | 시스템 아키텍처 — 노드 구성, 핀 배정, 계층 간 계약, 스캔 타임라인, 실측 기준선 | 이현우 |
+
 ### STM32 펌웨어
 
 | 문서 | 내용 | 담당 |
@@ -58,8 +64,17 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 |---|---|---|
 | [stm32-rpi-uart.md](interfaces/stm32-rpi-uart.md) | Protocol v6 — 프레임, 명령·오류 코드, payload 구조체, 각도 규약 | 이현우 |
 | [scan-artifacts.md](interfaces/scan-artifacts.md) | 좌표계·격자와 산출물 — JSON schema 1.2 / organized PCD | 이현우 |
+| [mqtt-topics.md](interfaces/mqtt-topics.md) | MQTT 토픽 계약 v1.4 — 명령·상태·이벤트 페이로드, QoS·retain, 인증서 | 이현우 |
 | [camera-upload.md](interfaces/camera-upload.md) | 데몬→카메라 측정 JSON push — mTLS 신원·프레이밍·재시도 | 이현우 / 이영민 |
 | [qt-rpi-enroll.md](interfaces/qt-rpi-enroll.md) | Qt↔RPi 등록·발급 — `POST /enroll`, 스캔 조회, 인증서·ACL 요구조건 | 송영빈 |
+
+### Yocto
+
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [image.md](components/yocto/image.md) | 이미지와 빌드 호스트 구성 | 이현우 |
+| [layers-and-recipes.md](components/yocto/layers-and-recipes.md) | 레이어 구성과 레시피 | 이현우 |
+| [kernel-drivers-dt.md](components/yocto/kernel-drivers-dt.md) | 커널·드라이버·디바이스 트리 연결 | 이현우 |
 
 ### Qt 관제 콘솔
 
@@ -72,5 +87,6 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [rpi-daemon-build-and-deploy.md](guides/rpi-daemon-build-and-deploy.md) | RPi 데몬 빌드·systemd·kernel module 설치와 반복 스캔 운영 | 이현우 |
+| [yocto-build.md](guides/yocto-build.md) | Yocto 이미지 빌드, SD 기록, 부팅 체크리스트 | 이현우 |
 | [qt-build-and-deploy.md](guides/qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 (macOS/Windows) | 송영빈 |
 | [broker-token-runbook.md](guides/broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 접속 끊기, 증상별 진단 | 송영빈 |
