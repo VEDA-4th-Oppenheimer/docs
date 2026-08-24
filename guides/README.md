@@ -7,3 +7,4 @@
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [rpi-daemon-build-and-deploy.md](rpi-daemon-build-and-deploy.md) | RPi 데몬 CMake, kernel build, systemd와 반복 스캔 배포 | 이현우 |
+| [yocto-build.md](yocto-build.md) | Yocto 이미지 빌드, SD 기록, 부팅 체크리스트 | 이현우 |
