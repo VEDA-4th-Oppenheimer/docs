@@ -1,6 +1,5 @@
 # 송영빈 — 담당 범위와 작성 문서
 
-
 ## 담당 범위
 
 | 파트 | 맡은 것 | 저장소 위치 |
@@ -8,7 +7,8 @@
 | STM32 펌웨어 | TOFSense-F2 P 라이다 NLink 파서 | `STM32` — `App/lidar/` |
 | RPi 드라이버 | ICM-20948 IMU 커널 드라이버 · DT 오버레이 | `RPi` — `driver/imu_driver.c`, `driver/overlays/` |
 | RPi 브로커 | `/enroll` 인증서·설정 발급 서비스, 토큰 CLI, 스캔 조회 | `RPi` — `broker/` (이현우와 공동) |
-| Qt 관제 콘솔 | 앱 전체 | `QT` |
+| Qt 관제 콘솔 | 앱 전체 — RTSP 4채널, MQTT 브리지, 포인트클라우드 뷰, 등록 마법사 | `QT` |
+| 인터페이스 계약 | Qt↔RPi 등록·발급 계약 (HTTPS 8443) | `docs` — `interfaces/qt-rpi-enroll.md` |
 
 ## 작성 문서
 
