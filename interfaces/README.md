@@ -7,7 +7,7 @@
 | Qt 관제 ↔ RPi 데몬 (MQTT 토픽) | *작성 전* |
 | 데몬 → Qt·캘리브레이션 (스캔 산출물) | [scan-artifacts.md](scan-artifacts.md) — 이현우 |
 | STM32 ↔ RPi (UART 프로토콜) | [stm32-rpi-uart.md](stm32-rpi-uart.md) — 이현우 |
-| 인증서 발급 서버 (mTLS) | *작성 전* |
+| RPi 데몬 → 카메라 앱 (mTLS 파일 업로드) | [camera-upload.md](camera-upload.md) — 이현우 |
 
 한쪽만 고치면 조용히 깨지는 내용이 여기 옵니다. 값(CMD 번호, 구조체 크기)을 적을 때는
 어느 코드를 기준으로 한 시점인지 함께 적으세요.
