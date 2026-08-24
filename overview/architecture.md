@@ -341,14 +341,22 @@ heartbeat 두절로 오판해 성공한 스캔마다 헛 DISARM 이 걸린다. �
 때문이다. 카메라가 응답하지 않으면 `tcp_syn_retries=6` 기준 약 127초 동안 epoll 이
 통째로 멈춘다.
 
-### 6.1 상태 기계
+### 6.1 FSM
 
+```mermaid
+stateDiagram-v2
+    [*] --> ST_IDLE
+    ST_IDLE --> ST_SCANNING: cmd/scan · home 완료 · 수평 게이트 통과
+    ST_SCANNING --> ST_EXPORT: CMD_SCAN_DONE + 최종 drain
+    ST_EXPORT --> ST_IDLE: JSON/PCD 기록 + 카메라 업로드(동기)
+    ST_IDLE --> ST_DISARM: cmd/disarm · 링크 두절
+    ST_SCANNING --> ST_DISARM: STM32 오류 · 타임아웃 · EMS
+    ST_EXPORT --> ST_DISARM: EXPORT_FAIL
+    ST_DISARM --> ST_IDLE: cmd/rearm
 ```
-IDLE ──scan/home──> SCANNING ──DONE──> EXPORT ──> IDLE
-  ^                    │                  │
-  └────────────────────┴──────────────────┘
-              어디서든 DISARM ──rearm──> IDLE
-```
+
+`ST_DISARM` 은 어느 상태에서나 진입한다. 빠져나오는 길은 명시적 `rearm` 하나뿐이라,
+안전정지가 걸린 뒤 저절로 스캔이 재개되는 경로가 없다.
 
 | 상수 | 값 | 역할 |
 |---|---|---|
