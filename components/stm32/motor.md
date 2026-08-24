@@ -109,6 +109,68 @@ $$I_{\text{CHOP}} = \frac{V_{\text{ref}}}{5 \times R_{\text{sense}}} = \frac{V_{
 
 ---
 
+### 3.3 모터 구동 및 S-Curve 가감속 실행 흐름도 (ISR Flowchart)
+
+```mermaid
+flowchart TD
+    ISRStart([TIM1/TIM2 타이머 인터럽트 진입]) --> CheckTarget{현재 펄스 == 목표 펄스?}
+    CheckTarget -- Yes (도착/정지) --> ResetStartSpeed[속도를 MOTOR_START_PPS 50으로 리셋] --> EndISR([인터럽트 복귀])
+    CheckTarget -- No (이동 중) --> SetDir[DIR 핀 방향 출력 및 셋업 지연]
+    SetDir --> StepHigh[STEP 핀 HIGH 인가]
+    StepHigh --> SpinWait[50회 스핀 지연: 4us 펄스폭 유지]
+    SpinWait --> StepLow[STEP 핀 LOW 복귀]
+    StepLow --> UpdatePulse[현재 위치 pulse 카운터 증감]
+    UpdatePulse --> CallRamp[axis_ramp 남은 펄스 계산]
+    CallRamp --> CalcDecel[감속 필요 펄스 수 계산: n_decel = dv²/2a + 4]
+    CalcDecel --> CheckDecel{남은 펄스 <= n_decel?}
+    CheckDecel -- Yes (감속 구간) --> DecelSpeed[v_q8 = v_q8 - dv_dec_q8 확정 감속]
+    CheckDecel -- No (가속/순항) --> CheckCruise{v_q8 < cruise_q8?}
+    CheckCruise -- Yes (가속 구간) --> ScurveScale[S-Curve Q8 가중치 계산: axis_scurve_scale_q8]
+    ScurveScale --> AccelSpeed[v_q8 = v_q8 + dv_q8 * scale / 256]
+    CheckCruise -- No (순항 구간) --> MaintainSpeed[순항 속도 750/100 PPS 유지]
+    DecelSpeed --> UpdateARR[다음 펄스 주기 ARR 갱신: ARR = 1,000,000 / v - 1]
+    AccelSpeed --> UpdateARR
+    MaintainSpeed --> UpdateARR
+    UpdateARR --> EndISR
+```
+
+---
+
+### 3.4 메인루프 ↔ 모터 ISR ↔ 라이다 수신 연동 시퀀스 다이어그램 (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Main as App/scan (메인루프 Super Loop)
+    participant Motor as App/motor (타이머 ISR: TIM1/TIM2)
+    participant Lidar as App/lidar (라이다 ISR: USART6)
+    participant RPi as RPi Daemon (/dev/turret)
+
+    Main->>Motor: motor_set_target(ax, target_pulse)
+    activate Motor
+    Note over Motor: TIMx 인터럽트 시작 (초기 50 PPS 주기)
+
+    loop 매 스텝 펄스 인터럽트 (1/16 마이크로스텝)
+        Motor->>Motor: STEP 핀 4us HIGH 출력 & pulse 카운터 갱신
+        Motor->>Motor: axis_ramp() 호출 -> 2차 S-Curve 가속 (50 -> 750 PPS)
+        
+        opt 라이다 100Hz 거리 데이터 수신 시
+            Lidar->>Main: scan_latch_angles(&pan, &tilt) 기구각 원자적 래치
+            Main->>RPi: uart_rpi_send_scan_point(pan, tilt, dist, conf)
+        end
+
+        Motor->>Motor: 남은 펄스 <= n_decel (+4p) 감속 시작
+        Motor->>Motor: 50 PPS 최저 속도로 소프트랜딩 안착
+    end
+
+    Motor-->>Main: pulse == target (motor_is_idle == true)
+    deactivate Motor
+    Main->>Main: SCAN_LINE_SETTLE_MS (40ms) 정착 대기
+    Main->>Main: 행 완료 판정 및 다음 Serpentine 줄로 전이
+```
+
+---
+
 ## 4. 상세 설계 및 수학적 모델링
 
 ### 4.1 펄스 ↔ 각도(deci-degree) 단위 환산
