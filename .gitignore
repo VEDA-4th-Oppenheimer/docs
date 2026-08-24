@@ -10,3 +10,8 @@
 *~
 *.swp
 *.tmp
+
+# 개인 작업물 / 아카이브
+.my/
+VEDA DOCS/
+.obsidian/

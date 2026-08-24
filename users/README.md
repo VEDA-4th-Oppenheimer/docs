@@ -5,6 +5,7 @@
 
 | 사람 | 문서 |
 |---|---|
+| 강유근 | [Yoogeun/roll.md](Yoogeun/roll.md) |
 | 송영빈 | [youngbin/roll.md](youngbin/roll.md) |
 | 이현우 | [Hyunwoo/roll.md](Hyunwoo/roll.md) |
 

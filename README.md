@@ -41,16 +41,18 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
+| [motor.md](components/stm32/motor.md) | 2축 스텝모터 구동 및 가감속 제어 — S-Curve Q8, 750 PPS 골든레이시오, 사다리꼴 램프, V_REF 튜닝 | 강유근 / 송영빈 |
+| [encoder.md](components/stm32/encoder.md) | 14비트 I2C 각도 엔코더 (MT6701) — 220Ω SI 직렬 댐핑, 3단계 버스 복구, Monitor-Only 탈조 감시 | 강유근 |
+| [scan.md](components/stm32/scan.md) | 2축 스캔 시퀀서 — 9단계 FSM, 홈 확립, Serpentine 40ms 정착, SC_PARK 안전 제어 | 강유근 / 이현우 |
 | [lidar.md](components/stm32/lidar.md) | TOFSense-F2 P 수신 드라이버 — NLink 프레임 파싱, ISR 각도 래치, SPSC 링버퍼 | 송영빈 |
-| [motor-ramp.md](components/stm32/motor-ramp.md) | 사다리꼴 속도 프로파일 — 램프 산수, 타이머 시간축, ISR 삽입점 | 송영빈 |
 | [uart-rpi.md](components/stm32/uart-rpi.md) | RPi 링크 프로토콜 어댑터 — 링버퍼, 프레임 파서, 1Hz STATUS, 진단 카운터 | 이현우 |
-| [scan.md](components/stm32/scan.md) | 2축 스캔 시퀀서 — 홈 확립, serpentine 스윕, 탈조 감시, 라이다 연계 | 이현우 / 강유근 |
 | [runtime.md](components/stm32/runtime.md) | 펌웨어 런타임 — 초기화 순서, 협조적 메인루프, HAL 콜백과 IWDG | 이현우 / 강유근 / 송영빈 |
 
 ### Raspberry Pi
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
+| [driver/led-sw.md](components/rpi/driver/led-sw.md) | LED, SWITCH, BUZZER 커널 드라이버 — Hardware PWM0, 50ms 폴링 디바운스, DT Overlay | 강유근 |
 | [driver/imu.md](components/rpi/driver/imu.md) | ICM-20948 수평 기준 — DT 오버레이, 커널 드라이버, `/dev/imu` 계약 | 송영빈 |
 | [broker-enroll.md](components/rpi/broker-enroll.md) | `/enroll` 발급 서비스 — 1회용 토큰, 인증서 서명, ACL 자동 등록, 스캔 조회 | 송영빈 |
 | [driver/turret.md](components/rpi/driver/turret.md) | `/dev/turret` 커널 드라이버 — serdev, kfifo 스캔 스트림, ioctl ABI | 이현우 |
@@ -87,6 +89,7 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
+| [static-analysis-ci.md](guides/static-analysis-ci.md) | 임베디드 2-Track 정적 분석 (MISRA C:2012 & Cppcheck) 품질 및 CI 가이드 | 강유근 |
 | [rpi-kernel-build.md](guides/rpi-kernel-build.md) | RPi 커널 모듈·DTBO build와 vermagic 검증 | 이현우 |
 | [rpi-daemon-build-and-deploy.md](guides/rpi-daemon-build-and-deploy.md) | RPi 데몬 CMake·systemd 설치와 반복 스캔 운영 | 이현우 |
 | [yocto-build.md](guides/yocto-build.md) | Yocto 이미지 빌드, SD 기록, 부팅 체크리스트 | 이현우 |

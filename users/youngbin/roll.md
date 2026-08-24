@@ -15,6 +15,7 @@
 | 문서 | 다루는 것 |
 |---|---|
 | [라이다 수신 드라이버](../../components/stm32/lidar.md) | NLink 프레임 파싱, ISR 각도 래치, SPSC 링버퍼, UART 에러 복구, 상행 계약 `proto_scan_point` |
+| [2축 스텝모터 구동 및 가감속](../../components/stm32/motor.md) | 1차 사다리꼴 가감속 램프 도입 및 타이머 시간축 설계 (강유근과 공동) |
 | [STM32 펌웨어 런타임](../../components/stm32/runtime.md) | 가감속 타이머 초기화 순서와 실행 제약 (이현우·강유근과 공동) |
 | [IMU 드라이버](../../components/rpi/driver/imu.md) | ICM-20948 레지스터 뱅크, MPU-6050 교체 이력, `/dev/imu` 계약, 브링업·진단 |
 | [발급 서비스](../../components/rpi/broker-enroll.md) | 1회용 토큰 수명주기, 인증서 서명 위임, ACL 자동 등록, 스캔 조회 3중 방어 |
