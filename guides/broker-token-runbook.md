@@ -128,7 +128,7 @@ sudo mkdir -p /var/lib/adts/scans && sudo chown pi:pi /var/lib/adts/scans
 
 | 증상 | 먼저 볼 것 |
 |---|---|
-| 등록 창에서 "토큰이 유효하지 않거나 이미 사용되었습니다" | `--list-tokens` 에 있나. 없으면 이미 쓰인 것 |
+| 등록 창에서 "토큰이 유효하지 않거나 이미 사용되었다" | `--list-tokens` 에 있나. 없으면 이미 쓰인 것 |
 | 등록은 됐는데 **영상만 안 나온다** | `/etc/adts/cameras.json` 유무. 없어도 발급은 성공한다(설계) |
 | 등록은 됐는데 **MQTT 만 안 붙는다** | ACL 에 CN 블록이 붙었나(4절). 가장 흔한 원인 |
 | 인증서는 다 받았는데 mTLS 만 실패 | 키가 전통 RSA 인가. PKCS#8 이면 Qt 가 조용히 실패한다 |
