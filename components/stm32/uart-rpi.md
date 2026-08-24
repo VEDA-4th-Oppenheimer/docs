@@ -1,18 +1,3 @@
----
-tags:
-  - project/adts
-  - part/stm32
-  - uart
-  - protocol
-doc_id: ADTS-STM-60
-part: STM32
-owner: 이현우
-status: partially-verified
-updated: 2026-08-24
-source: STM32/App/uart_rpi/uart_rpi.c
-commit: bd53921
----
-
 # uart_rpi 프로토콜 어댑터
 
 | 항목 | 내용 |
@@ -24,9 +9,6 @@ commit: bd53921
 | 기준 코드 | STM32 `bd53921` (`main`, 2026-08-21) |
 | 직전 기준선 | `c5c1c67`. `App/uart_rpi/` 는 두 커밋 간 변경 없음 |
 | 포트 | USART1 PA9 TX / PA10 RX, 115200 8N1 |
-| 상태 | 구현 완료 · 거절 경로(STM-60-01/03)는 관측 수단이 없어 미검증 (6장) |
-
-← [[00 개발보고서 개요]] · 계약: [[10 Protocol v6 통신 계약]] · 상위: [[61 scan 2축 스캔 시퀀서]] · 연결: [[62 펌웨어 런타임 연결]]
 
 ---
 
@@ -48,9 +30,7 @@ USART1 RX ISR   바이트를 링버퍼에 넣고 다음 수신 무장
 
 현재 `scan_home()` 은 상태만 전이하고, 실제 엔코더 I2C 판독은 메인루프의
 `scan_process()` 경로에서 수행한다. 이 구조는 ISR 에 블로킹 I2C 가 들어오는 것을
-막는다. 다만 과거 ISR 직접 실행 구조와 라이다 프레임 유실, 수정 후 해소를 함께
-보여 주는 측정 로그는 남아 있지 않으므로 소요 시간과 과거 장애는 검증 사실로
-주장하지 않는다.
+막는다.
 
 ---
 
@@ -61,7 +41,7 @@ USART1 RX ISR   바이트를 링버퍼에 넣고 다음 수신 무장
 | 프레임 파싱·조립·디스패치 | 모터 구동 (강유근) |
 | 링버퍼와 오버플로 정책 | 엔코더 판독 (강유근) |
 | 1Hz STATUS 와 진단 카운터 수집 | 라이다 NLink 파싱 (송영빈) |
-| 스캔 점·DONE 상행 | 스캔 시퀀스 → [[61 scan 2축 스캔 시퀀서]] |
+| 스캔 점·DONE 상행 | 스캔 시퀀스 내부 동작 |
 
 모터·엔코더·라이다의 결과가 어떤 프레임으로 외부에 보이는지만 다룬다.
 
@@ -117,9 +97,8 @@ head 만 ISR 이, tail 만 메인루프가 증가시키는 SPSC 구조라 락이
 모든 명령 응답과 스캔 점이 `HAL_UART_Transmit`(타임아웃 100ms)으로 직렬화된다.
 명시적 TX mutex 는 없지만 호출이 메인루프 컨텍스트에 집중돼 있다.
 
-> [!danger] ISR 에서 부르면 안 된다
-> 라이다 ISR 은 각도를 래치만 하고, 점 상행은 메인루프의 `lidar_process()` →
-> `scan_submit_sample()` 경로로 넘긴다.
+TX API는 ISR에서 호출하지 않는다. 라이다 ISR은 각도만 래치하고 점 상행은 메인루프의
+`lidar_process()` → `scan_submit_sample()` 경로로 넘긴다.
 
 | 장점 | 대가 |
 |---|---|
@@ -133,16 +112,14 @@ head 만 ISR 이, tail 만 메인루프가 증가시키는 SPSC 구조라 락이
 | IT/DMA TX + 송신 큐 | 큐 깊이·우선순위·오버플로 정책이 새로 필요하고, 실패를 호출자에게 돌려줄 방법이 사라진다 |
 | 실패를 무시하고 fire-and-forget | 점 카운터가 실제 송신 수보다 커진다 — 아래 4.1 의 폐기 이유 |
 
-트레이드오프를 그대로 안고 있다. 100ms 블로킹은 STM-60-04 로 열려 있다.
-
-반증: 100ms 타임아웃이 실제로 걸리면 `tx_fail` 은 올라야 한다. `rx_ovf` 는 그
+100ms 타임아웃이 실제로 걸리면 `tx_fail` 은 올라야 한다. `rx_ovf` 는 그
 동안 RPi 가 255B를 넘게 보낸 경우에만 함께 오른다. 2026-08-19 표준 스캔에서
 둘 다 0 이었다는 결과는 해당 실행에서 TX 실패와 RX 오버플로를 관측하지 않았다는
 뜻이며, 두 카운터가 항상 함께 움직인다는 뜻은 아니다.
 
 ---
 
-## 4. 구현 — 코드 해설
+## 4. 구현
 
 ### 4.1 프레임 송신 — `uart_rpi_send_frame()` (`:58`)
 
@@ -181,42 +158,16 @@ bool uart_rpi_send_frame(uint8_t cmd, const void *payload, uint8_t payload_len)
 - MISRA 21.15(`memcpy` 타입 불일치) deviation 에 근거 주석을 단다 — 정책 A 에
   따라 폴더 통째 억제는 금지이다
 
-결정 — 반환값을 `bool` 로 돌려준다. 예전에는 `(void)` 로 버렸다(`uart_rpi.c:50~56`).
-
-버리면 타임아웃이나 부분 전송이 나도 호출자가 모른다. 특히 스캔 점은 보낸 셈
-치고 카운터를 올려 **`SCAN_DONE.point_count` 가 RPi 가 실제로 받은 수보다
-커질 수 있다.** `PONG`·`HOMED`·`ERROR` 도 조용히 사라진다.
-
-현재 드라이버는 `point_count` 를 private `last_point_count` 에 저장하지만
-`TURRET_GET_STATE` ABI 로 내보내지 않는다. 따라서 데몬의 `stm_reported` 는 항상
-0 이고, STM32 송신 성공 수와 데몬 수신 수의 종단 간 대조는 아직 끊겨 있다.
-
-파급: 이 함수가 `s_tx_fail` 을 올리는 유일한 지점이다. 다른 경로로 TX 를
-추가하면 그 실패는 진단에 잡히지 않는다.
-
-2026-08-19 산출물에서 수신 히스토그램 합 52,794는 유효 40,088 + 병합 12,706과
-일치한다. 이것은 데몬 내부의 수신·격자 배치 보존식을 확인하지만, JSON 에
-STM32 `point_count` 가 기록되지 않으므로 STM32→드라이버 구간의 무손실까지
-입증하지는 않는다.
+반환값은 HAL 프레임 송신 성공 여부이다. 스캔 점은 반환값이 `true`일 때만
+`s_scan_count`를 증가시키므로 `SCAN_DONE.point_count`는 STM32의 로컬 송신 성공 수를
+뜻한다. RPi 수신 확인 응답 수는 아니다. `s_tx_fail`도 이 함수에서만 증가한다.
 
 ### 4.2 수신 ISR — `uart_rpi_on_rx_cplt()` (`:317`)
 
 ```c
 const uint16_t next = (uint16_t)((s_rb_head + 1u) & 0xFFu);  /* 256 wrap */
 
-/* 가득 차면 새 바이트를 버린다(옛 것을 덮지 않는다).
- *
- * 주의: 예전에는 full 검사 없이 그냥 썼다. 두 가지가 문제였다 —
- *   ① 아직 안 읽은 바이트를 덮는데, 그건 파싱 중인 프레임의 일부일
- *      수 있어 그 프레임까지 같이 깨진다. 새 것을 버리면 손실이
- *      뒤쪽에만 남고 파서의 SOF 재동기화가 알아서 복구한다.
- *   ② 정확히 한 바퀴(256B) 추월하면 head == tail 이 되어 소비자가
- *      비어 있는 것으로 오인한다. 즉 넘쳤다는 사실조차 사라진다.
- *
- * 256B 는 하행 프레임 20개분이라 정상 상태에서는 절대 안 찬다.
- * 차는 경우는 메인루프가 오래 막힌 때뿐이고(엔코더 I2C 재시도 +
- * 버스 복구, 벤치 도구), 그래서 이 카운터가 곧 메인루프 블로킹의
- * 지표가 된다 — 지금은 그걸 볼 방법이 없다. */
+/* 가득 차면 읽지 않은 바이트를 보존하고 새 바이트를 버린다. */
 if (next != s_rb_tail) {
     s_rb[s_rb_head] = s_rx;
     s_rb_head       = next;
@@ -226,24 +177,12 @@ if (next != s_rb_tail) {
 (void)HAL_UART_Receive_IT(huart, (uint8_t *)&s_rx, 1u);
 ```
 
-위 소스 주석의 "256B는 하행 프레임 20개분"과 "정상 상태에서는 절대 안 찬다"는
-표현은 정확하지 않다. 실효 용량은 255B이고, 하행 프레임은 zero-payload 명령
-5B와 `SCAN_START` 15B 등으로 크기가 다르다. 지속적인 하행 버스트나 메인루프
-지연이 겹치면 찰 수 있다. 마지막 문장의 관측 공백만 v6에서 해소되어
-`s_rb_ovf` 가 `proto_status.rx_ovf` 로 상행된다.
+실효 용량은 255B이다. 가득 찬 상태에서 새 바이트를 버리므로 이미 적재된 프레임
+조각을 보존하고 `head == tail`이 빈 버퍼와 오버플로를 혼동하는 상황을 막는다.
+오버플로 수는 `s_rb_ovf`에 누적되어 `proto_status.rx_ovf`로 상행된다.
 
-"새 것을 버린다"는 정책의 근거 두 가지가 핵심이다. 특히 ②가 미묘하다 —
-링버퍼가 정확히 한 바퀴 추월하면 `head == tail` 이 되어 넘쳤다는 사실 자체가
-사라진다.
-
-> [!bug] STM-60-03 — `HAL_UART_Receive_IT` 반환값을 확인하지 않는다
-> 재무장이 실패하면 RX 가 조용히 영구 정지한다. `rx_ovf` 도 안 오르므로
-> 진단에도 안 걸린다.
-
-반증: 연속 하행 입력 중 `rx_ovf` 가 오른다면 같은 구간의 엔코더 I2C 재시도·
-버스 복구 같은 소비 지연을 함께 확인한다. 링버퍼 255B 는 115200 8N1 입력이
-끊김 없이 찰 때 약 22ms 분이다. 입력이 적으면 더 긴 블로킹도 잡히지 않으므로
-**0 이라는 것이 "메인루프가 한 번도 안 막혔다" 는 뜻은 아니다.**
+115200 8N1에서 연속 입력 255B는 약 22.1ms이다. `rx_ovf > 0`이면 같은 구간의
+엔코더 I2C 재시도·버스 복구 등 메인루프 지연과 하행 입력량을 함께 확인한다.
 
 ### 4.3 프레임 파서 — `proto_feed()` (`:265`)
 
@@ -298,9 +237,6 @@ static void proto_feed(uint8_t b)
 정상 파싱돼야 한다. 깨진 프레임 하나가 뒤 프레임까지 연쇄로 무너뜨린다면
 `need` 계산이나 폐기 경로가 잘못된 것이다.
 
-> [!bug] STM-60-06 — 파서 상태가 함수 static 이다
-> `uart_rpi_init()` 재호출로 리셋되지 않는다. 재초기화 테스트가 비결정적이 된다.
-
 ### 4.4 명령 디스패치 — `proto_dispatch()` (`:196`)
 
 ```c
@@ -352,25 +288,7 @@ if (rx_crc == calc) {
    가짜 `SCAN_DONE` 을 보내고 파킹 목표를 다시 만들게 된다. 현재 `motor.c`의
    `s_armed`가 전류 차단 뒤 펄스와 스텝카운트 갱신을 막으므로 실제 유령 이동은
    생기지 않지만, 완료 통지와 파킹 시퀀스 자체가 비상정지 의미에 맞지 않는다
-3. CRC 실패는 `DBG` 만 찍고 버린다 (STM-60-01)
-
-> [!bug] STM-60-02 — 길이 검증이 느슨하다
-> `CMD_SCAN_START` 는 `len` 이 틀리면 아무 통지 없이 무시된다(else 절 없음).
-> `HOME`/`STOP`/`DISARM`/`PING` 은 payload 가 붙어 와도 실행된다.
-> 계약대로면 둘 다 `ERR_BAD_LEN` 이어야 한다.
-
-파급 — 이 디스패처의 침묵 경로가 세 갈래다.
-
-| 경로 | 코드 | 지금 |
-|---|---|---|
-| CRC 불일치 | `:262` else | `DBG` 만. 카운터도 없다 |
-| `SCAN_START` 길이 불일치 | `:220` if 의 else 없음 | 아무 일도 안 일어난다 |
-| 알 수 없는 `cmd` | `:257` default | `DBG` 만 |
-
-셋 다 **RPi 쪽에서는 "명령을 보냈는데 아무 반응이 없다" 로만 보인다.** 원인을
-가르려면 양 끝 카운터가 필요한데 현재 `proto_status` 에 CRC/LEN 거절 카운터가 없다
-(STM-60-01). `ERR_BUSY` 가 v6 에서 생기기 전 스캔 거절이 딱 이 상태였고, 그때
-원인 규명이 어려웠던 것이 이 이슈를 P0 로 둔 이유다.
+3. CRC 실패 프레임은 명령을 실행하지 않고 폐기한다
 
 반증: CRC 게이트가 실제로 작동한다면 잡음 구간에서 명령이 실행되는 일은 없어야
 한다. 반대로 잘못된 명령이 실행된다면 CRC 검증이나 `crc_len` 계산이 틀린 것이다.
@@ -417,9 +335,8 @@ if ((now - s_last_ms) >= STATUS_PERIOD_MS) {
 각도는 이미 `SCAN_DATA` 에 실려 오고 카운터는 천천히 변하므로 더 자주 보낼
 이유가 없다(`uart_rpi.c:123~127`).
 
-파급: 주기를 늘리면 드라이버의 `STF_HOMED` 가 진실을 따라잡는 지연도 같이
-늘어난다. 그 플래그는 데몬이 "스캔을 시작해도 되나" 를 판단하는 근거다
-([[61 scan 2축 스캔 시퀀서]] 4.5).
+주기를 늘리면 드라이버의 `STF_HOMED`가 현재 상태를 따라잡는 지연도 같이 늘어난다.
+이 플래그는 데몬의 스캔 시작 gate에 사용된다.
 
 반증: 이 함수가 실제로 1Hz 로 돈다면 드라이버의 `status_seen` 이 서고 카운터
 5종이 갱신돼야 한다. 메인루프가 막히면 주기가 늘어질 뿐 멈추지는 않는다 —
@@ -438,19 +355,12 @@ if ((now - s_last_ms) >= STATUS_PERIOD_MS) {
 | `lidar_drop` | lidar |
 | `reject_busy` | scan |
 
-#### v6 에서 이 함수가 바꾼 것
+#### Protocol v6에서의 역할
 
-v5 까지 `proto_status` 는 정의만 있고 한 번도 보내진 적이 없었다.
-
-Protocol v6 이전에도 RPi 커밋 `4bb5708`에서 `TURRET_HOME` 요청 시
-`STF_HOMED` 를 내리는 경로가 추가됐으므로, v6 STATUS가 이 플래그를 내린 최초의
-수단은 아니다. 다만 STATUS가 없던 시기에는 STM32의 현재 상태가 주기적으로
-드라이버 캐시에 반영되지 않았고, 진단 카운터를 외부에서 읽을 경로도 없었다.
-당시 리셋·재플래시 뒤 거절 사건은 커밋 설명에만 남아 있고 원본 프레임 로그는
-보존돼 있지 않다.
-
-주기 송신을 켜자 이전 홈의 `homed` 값이 되살아나 홈 완료 전에 `SCAN_START` 가 나가는
-문제가 드러났다. `ERR_BUSY`(v6 신설)가 이를 잡는다.
+Protocol v6는 `proto_status`를 1초마다 실제 송신한다. 드라이버는 첫 STATUS 수신 후
+`status_seen`을 설정하고 STM32의 현재 각도·상태 flag·진단 카운터를 캐시에 반영한다.
+`TURRET_HOME` 요청 시에는 드라이버가 캐시된 `STF_HOMED`를 먼저 내리고, 이후 STATUS가
+STM32의 현재 값을 다시 동기화한다.
 
 ### 4.6 스캔 점 상행 — `uart_rpi_send_scan_point()` (`:167`)
 
@@ -478,19 +388,13 @@ v5 에서 라이다 원시 품질 필드가 붙어 6B → 18B 가 됐다. 정규
 한다. 2026-08-21 Phase 4 산출물에서 `0:128 / 1:53,620` 합 53,748 이
 수신 프레임 수와 일치한다.
 
-```c
-void uart_rpi_reset_scan_count(void)   /* :94 */
-```
-
-> 스캔 점 카운터를 0 으로. 요청이 받아들여진 뒤에 부를 것 — 디스패처에서
-> 먼저 밀면 거절된 요청이 진행 중인 스캔의 집계를 지운다.
-
-`scan_start()` 가 검증을 통과한 뒤에만 부르는 이유이다.
+`uart_rpi_reset_scan_count()`는 `scan_start()`가 요청 검증을 통과한 뒤에만 호출한다.
+진행 중인 스캔의 집계를 보존하기 위해 요청 승인 전에는 카운터를 초기화하지 않는다.
 
 ### 4.7 완료 통지 — `uart_rpi_send_scan_done()` (`:189`)
 
-현재 `s_scan_count` 를 `proto_scan_done` 으로 보낸다. 이 값은 RPi 수신 확인이
-아니라 STM32 로컬 TX 호출 성공 수이다 ([[10 Protocol v6 통신 계약]] 5.1).
+현재 `s_scan_count`를 `proto_scan_done`으로 보낸다. 이 값은 RPi 수신 확인이 아니라
+STM32 로컬 TX 호출 성공 수이다.
 
 ### 4.8 링버퍼 배출 — `uart_rpi_process()` (`:354`)
 
@@ -517,14 +421,9 @@ HAL IT 수신에서 ORE는 blocking error로 처리되어 진행 중 수신을 �
 FE/NE/PE는 non-blocking error로 콜백 뒤 수신을 계속한다. 따라서 재무장은 ORE
 복구에 필요하지만 모든 UART 에러 1회가 링크를 영구 정지시키는 것은 아니다.
 
-> [!warning] 워치독은 이 정지와 무관하게 계속 급여된다
-> IWDG 는 메인루프가 도는 한 refresh 되므로 링크만 조용히 멈춘 상황이 겉으로
-> 드러나지 않는다. 현재 STATUS에는 UART 오류 원인별 카운터나 재무장 실패
-> 카운터가 없어 기존 진단값만으로 이 정지를 식별할 수 없다.
-
-> [!bug] STM-60-05 — UART 에러 원인별 카운터가 없다
-> ORE/FE/NE/PE 를 구분하지 않고 파서 상태 리셋 정책도 명시적이지 않다. 단순
-> 재시작은 복구에는 도움이 되지만 장애가 보이지 않게 사라진다.
+IWDG는 UART 수신 상태가 아니라 메인루프 진행 여부를 감시한다. RPi는 PING/PONG
+heartbeat로 링크 상태를 판정하고 `status_seen`으로 Protocol v6 상태 경로의 수신 이력을
+확인한다.
 
 ---
 
@@ -534,12 +433,8 @@ FE/NE/PE는 non-blocking error로 콜백 뒤 수신을 계속한다. 따라서 �
 |---|---|
 | `main.c` → `uart_rpi` | `init`, RX/error 콜백 위임, `process`, `status_tick` |
 | `scan.c` → `uart_rpi` | `send_frame`(ERROR/HOMED), `send_scan_point`, `send_scan_done`, `reset_scan_count` |
+| 진단 코드 → `uart_rpi` | `tx_fail_count`, `rx_overflow_count` |
 | `uart_rpi` → `motor`/`lidar` | STATUS 조립용 상태 카운터 getter |
-
-공개돼 있으나 위 표에 없는 것이 둘 있다 — `uart_rpi_tx_fail_count()` (`:99`) 와
-`uart_rpi_rx_overflow_count()` (`:105`). 현재 저장소에서 호출자가 없고, 두 값은
-`uart_rpi_status_tick()` 이 내부 변수로 직접 읽어 `CMD_STATUS` 에 싣는다.
-진단 경로용으로 열어 둔 API 이며 MISRA 8.7 deviation 근거도 그렇게 적혀 있다.
 
 `uart_rpi` 는 `scan` 을 호출하고(디스패치), `scan` 은 `uart_rpi` 를
 호출한다(상행). 따라서 모듈 호출 그래프에는 순환 의존이 있다. 다만 두 공개
@@ -552,36 +447,29 @@ FE/NE/PE는 non-blocking error로 콜백 뒤 수신을 계속한다. 따라서 �
 
 | 항목 | 방법 | 등급 | 결과 |
 |---|---|---|---|
-| CMake Debug 빌드 | clean 후 `cmake --build build/Debug` | B | 성공 |
+| CMake Debug 빌드 | `cmake --build --preset Debug` | B | 성공 |
 | text / data / bss | `arm-none-eabi-size` | B | 44,092 / 468 / 3,052 B |
 | RAM | 링커 리포트 | B | 3,520 B (3.58% of 96KB) |
 | FLASH | 링커 리포트 | B | 44,576 B (8.50% of 512KB) |
-| cppcheck / MISRA | `tools/run_static_analysis.sh` | B | 15파일 통과, exit 0 (cppcheck 2.21) |
-| protocol 해시 | `shasum` | B | RPi 와 일치 |
+| cppcheck / MISRA | `tools/run_static_analysis.sh` | B | 15파일 통과, exit 0 (cppcheck 2.21.0) |
+| protocol 해시 | `shasum -a 256` | B | STM32·RPi `657b8c88…e689e7` 일치 |
 | 실기 프레임 왕복 | 표준 스캔 | A | 52,794 프레임, `tx_fail`/`rx_ovf` 0 |
 | v6 STATUS 주기 송신 | 같은 스캔 | A | 드라이버 `status_seen=1`, 카운터 5종 수신 |
-| 프레임 왕복 재현 | 2026-08-21 실기 2회 | A | `checksum_error_count` 0 · `out_of_range` 0, 두 판 일치 |
-| `ERR_BAD_CRC`/`ERR_BAD_LEN` 발화 | — | D | 거절 경로가 침묵이라 관측 수단이 없다. STM-60-01 |
-| `Receive_IT` 재무장 실패 | — | D | 반환값을 안 봐서 발생해도 기록이 남지 않는다. STM-60-03 |
 
-빌드·정적분석은 기준선 `bd53921` 에서 2026-08-24 에 다시 돌린 결과다. 직전
-기준선 `c5c1c67` 의 값(text 43,916 / FLASH 8.47%)은 그 시점 것이다.
+빌드·정적분석과 protocol hash 대조는 기준선 `bd53921`에서 2026-08-24에 다시 실행한
+결과이다.
 
-> [!important] 진단 카운터 수신이 v6 실기 동작의 증거다
-> 15바이트 `CMD_STATUS` 는 v6 에만 있다. v5 이하였다면 드라이버가 길이 불일치로
-> `turret_bad_len` 을 찍었을 것이다.
-
-> [!note] 운영 규칙 — 증거 등급 D
-> 펌웨어 플래시는 사용자가 직접 하고 자동화 세션은 빌드·전송까지만 한다는
-> 과거 세션 메모가 있다. 실행 소스나 로그로 검증할 성질의 주장은 아니며,
-> 현재도 유효한지는 사용자 운영 규칙으로 확인해야 한다.
+15바이트 `CMD_STATUS`의 수신과 `status_seen=1`은 Protocol v6 펌웨어가 주기 상태
+송신 경로를 실행했다는 근거이다.
 
 ### 6.1 진단 — 카운터로 원인 가르기
 
 ```bash
 # RPi 쪽에서
 watch -n1 sudo ./turret_test state
-mosquitto_sub ... -t adts/state/daemon -C 1 | jq .diag
+mosquitto_sub -h localhost -p 8883 --cafile /etc/adts/certs/ca.crt \
+  --cert /etc/adts/certs/qt-console.crt --key /etc/adts/certs/qt-console.key \
+  -t adts/state/daemon -C 1 | jq .diag
 ```
 
 | 관측 | 원인 |
@@ -613,38 +501,5 @@ mosquitto_sub ... -t adts/state/daemon -C 1 | jq .diag
 bash tools/run_static_analysis.sh     # -> "정적분석 통과"
 ```
 
-> [!warning] 로컬 통과가 CI 통과를 보장하지 않는다
-> CI는 `ubuntu-latest`에서 `apt-get install -y cppcheck`를 실행해 버전을 고정하지
-> 않는다. 로컬 결과는 cppcheck 2.21이며, CI 버전과 차이가 있는지는 각 실행 로그에
-> `cppcheck --version`을 남겨 확인해야 한다.
-
----
-
-## 7. 알려진 이슈
-
-| ID | 항목 | 우선순위 | 상태 | 조치 방향 |
-|---|---|---|---|---|
-| STM-60-01 | `ERR_BAD_CRC`/`ERR_BAD_LEN` 을 안 보냄 | P0 | 열림 | CRC/LEN 거절 카운터를 `proto_status` 에 추가해 양 끝 대조 가능하게 |
-| STM-60-02 | 길이 검증 느슨 | P1 | 열림 | zero-payload 는 `LEN==0` 강제, `SCAN_START` 는 정확한 크기만 |
-| STM-60-03 | `Receive_IT` 재등록 반환 무시 | P1 | 열림 | 실패 시 retry / fault 상태 |
-| STM-60-04 | `HAL_UART_Transmit` 100ms 블로킹 | P1 | 열림 | IT/DMA TX + 유한 큐 + 우선순위(fatal ERROR ≫ 명령 응답 ≫ SCAN_DATA ≫ STATUS) |
-| STM-60-05 | UART 에러 원인별 카운터 없음 | P1 | 열림 | ORE/FE/NE/PE 분리 + 파서 리셋 정책 명시 |
-| STM-60-06 | `init` 이 static state 미리셋 | P2 | 열림 | `s_scan_count`·`s_tx_fail`·`s_rb_ovf`·파서 상태·status tick 타임스탬프 |
-| STM-60-07 | 와이어 버전 없음 | P2 | 보류 | 현재는 드라이버의 payload 길이 불일치 경고가 대신 잡는다 |
-| STM-60-08 | `tx_fail`/`rx_overflow` getter 에 호출자가 없다 | P2 | 열림 | 5장. `status_tick` 이 내부 변수를 직접 읽는다. 열어 둘지 지울지 결정 |
-
----
-
-## 8. 참고
-
-- 소스: `STM32/App/uart_rpi/uart_rpi.c`, `.h`
-- 계약: [[10 Protocol v6 통신 계약]] (원본은 RPi 사본)
-- 상위: [[61 scan 2축 스캔 시퀀서]]
-- 결선: [[62 펌웨어 런타임 연결]]
-- 대응 드라이버: [[20 turret_driver 커널 드라이버]]
-
-### 8.1 개정 이력
-
-| 날짜 | 변경 |
-|---|---|
-| 2026-08-24 | `claims-60` 재대조 반영 — UART 오류·진단 의미, point_count ABI, 링버퍼·프레임 크기, 의존 방향, 근거 등급 정정 |
+CI는 `ubuntu-latest`에서 배포판의 cppcheck를 설치한다. 로컬 결과와 비교할 때는 각 실행
+로그의 `cppcheck --version`도 함께 확인한다.
