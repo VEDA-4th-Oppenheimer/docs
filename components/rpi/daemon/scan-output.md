@@ -42,6 +42,25 @@ Linux 전용 이벤트 API에 의존하지 않아 macOS·Linux host harness에�
 | `scan_out_expected_points(req)` | 진행률 분모 계산 |
 | `scan_out_warn_seam(req, log_core)` | 팬 양끝 중복 평면 경고 |
 
+`scan_output.h`가 노출하는 선언은 다음과 같다.
+
+```c
+struct scan_out *scan_out_open(const struct scan_request *req,
+                               int32_t lidar_offset_mm,
+                               void *log_core);
+void scan_out_add(struct scan_out *o, const struct proto_scan_point *p);
+void scan_out_set_home(struct scan_out *o,
+                       uint16_t pan_raw, uint16_t tilt_raw,
+                       int16_t pan_ddeg, int16_t tilt_ddeg);
+bool scan_out_close(struct scan_out **o);
+
+uint32_t scan_out_point_count(const struct scan_out *o);
+const char *scan_out_path(const struct scan_out *o);
+const char *scan_out_json_path(const struct scan_out *o);
+uint32_t scan_out_expected_points(const struct scan_request *r);
+void scan_out_warn_seam(const struct scan_request *r, void *log_core);
+```
+
 핸들의 내부 구조를 header에 노출하지 않는다. 코어는 getter와 반환값을 통해서만 상태를
 읽으며 격자 메모리나 writer 내부 필드를 직접 수정하지 않는다.
 
@@ -90,12 +109,58 @@ Linux 전용 이벤트 API에 의존하지 않아 macOS·Linux host harness에�
 읽기 전용이거나 daemon uid에 쓰기 권한이 없는 경우 스캔을 시작하기 전에 실패시킨다.
 probe file은 close 후 삭제해 실패한 0B 산출물로 보이지 않게 한다.
 
+```c
+FILE *probe = fopen(o->pc_path, "w");
+if (probe == NULL) {
+    core_log(o->log, "SCAN",
+             "출력 경로에 쓸 수 없음 %s: %s — 스캔을 시작하지 않는다",
+             o->pc_path, strerror(errno));
+    free(o);
+    return NULL;
+}
+(void)fclose(probe);
+(void)unlink(o->pc_path);
+```
+
 session ID는 `calib-YYYYMMDD-HHMMSS`, scan ID는 현재 `sweep-000001` 형식이다.
 
 ```text
 <dir>/calib-YYYYMMDD-HHMMSS_sweep-000001.pcd
 <dir>/calib-YYYYMMDD-HHMMSS_sweep-000001_pan_tilt_lidar.json
 ```
+
+## 기구각 변환
+
+`mech_to_contract()`가 STM32 기구각을 `lidar_scan` 계약각으로 바꾸고 pan을
+`0..3599`로 정규화한다.
+
+```c
+static void mech_to_contract(int16_t mech_pan_ddeg, int16_t mech_tilt_ddeg,
+                             int16_t *out_pan_ddeg, int16_t *out_tilt_ddeg)
+{
+    int32_t pan;
+    int32_t tilt;
+
+    if (mech_tilt_ddeg <= 0) {
+        pan  = (int32_t)mech_pan_ddeg;
+        tilt = -900 - (int32_t)mech_tilt_ddeg;
+    } else {
+        pan  = (int32_t)mech_pan_ddeg + 1800;
+        tilt = -900 + (int32_t)mech_tilt_ddeg;
+    }
+
+    pan %= 3600;
+    if (pan < 0) {
+        pan += 3600;
+    }
+
+    *out_pan_ddeg  = (int16_t)pan;
+    *out_tilt_ddeg = (int16_t)tilt;
+}
+```
+
+정수 연산만 사용하며 외부 상태를 읽지 않는다. 기구 tilt가 nadir를 지난 양수 구간이면
+pan을 180° 이동해 반대 방위에 배치한다.
 
 ## 격자 기하 계산
 
@@ -124,6 +189,39 @@ step이 0인 내부 방어 경로에서는 1.0°를 사용하지만 코어 요�
 tilt를 row 0으로 두고 아래 방향으로 계산한다. 범위를 벗어난 점은 `drop_range`만 올리고
 셀에 넣지 않는다.
 
+```c
+static bool grid_index(const struct scan_out *o,
+                       int16_t pan_ddeg, int16_t tilt_ddeg,
+                       uint32_t *row, uint32_t *col)
+{
+    struct grid_geom g;
+    grid_geometry(&o->req, &g);
+
+    int32_t dpan = (int32_t)pan_ddeg - g.pan_origin_ddeg;
+    dpan %= 3600;
+    if (dpan < 0) {
+        dpan += 3600;
+    }
+
+    int32_t ci = (dpan + (g.step / 2)) / g.step;
+    if (g.full_circle && (ci == (int32_t)g.cols)) {
+        ci = 0;
+    }
+
+    const int32_t ri =
+        (g.tilt_top_ddeg - (int32_t)tilt_ddeg + (g.step / 2)) / g.step;
+
+    bool ok = false;
+    if ((ci >= 0) && ((uint32_t)ci < o->grid_cols) &&
+        (ri >= 0) && ((uint32_t)ri < o->grid_rows)) {
+        *col = (uint32_t)ci;
+        *row = (uint32_t)ri;
+        ok = true;
+    }
+    return ok;
+}
+```
+
 ## add 단계
 
 `scan_out_add()`는 점 하나를 다음 순서로 처리한다.
@@ -138,11 +236,73 @@ proto_scan_point
   -> 셀 중심에 더 가까운 샘플이면 대표 메타데이터 교체
 ```
 
-기구각 변환식은 다음과 같다.
+핵심 배치·병합 코드는 다음과 같다.
 
-```text
-m <= 0 : contract pan = p         contract tilt = -900 - m
-m >  0 : contract pan = p + 1800  contract tilt = -900 + m
+```c
+void scan_out_add(struct scan_out *o, const struct proto_scan_point *p)
+{
+    uint32_t row = 0u;
+    uint32_t col = 0u;
+    int16_t  c_pan  = 0;
+    int16_t  c_tilt = 0;
+
+    if (o->grid == NULL) {
+        return;
+    }
+
+    mech_to_contract(p->pan_ddeg, p->tilt_ddeg, &c_pan, &c_tilt);
+
+    if (!grid_index(o, c_pan, c_tilt, &row, &col)) {
+        o->drop_range++;
+        return;
+    }
+
+    struct scan_cell *cell = &o->grid[((size_t)row * o->grid_cols) + col];
+    const uint16_t off =
+        cell_center_offset_ddeg(o, row, col, c_pan, c_tilt);
+
+    o->status_hist[(p->dis_status < 3u) ? p->dis_status : 3u]++;
+    o->scan_end_ns = mono_ns();
+
+    if (!cell->filled) {
+        cell->seq           = o->pc_written;
+        cell->d_sum_mm      = (uint32_t)p->d_mm;
+        cell->d_min_mm      = p->d_mm;
+        cell->d_max_mm      = p->d_mm;
+        cell->n_samples     = 1u;
+        cell->best_off_ddeg = off;
+        cell->filled        = true;
+        o->pc_written++;
+    } else {
+        o->merged++;
+        if (cell->n_samples < 255u) {
+            cell->n_samples++;
+        }
+        cell->d_sum_mm += (uint32_t)p->d_mm;
+        if (p->d_mm < cell->d_min_mm) {
+            cell->d_min_mm = p->d_mm;
+        }
+        if (p->d_mm > cell->d_max_mm) {
+            cell->d_max_mm = p->d_mm;
+        }
+        if (off >= cell->best_off_ddeg) {
+            return;
+        }
+        cell->best_off_ddeg = off;
+    }
+
+    cell->rx_ns           = o->scan_end_ns;
+    cell->pan_ddeg        = c_pan;
+    cell->tilt_ddeg       = c_tilt;
+    cell->mech_pan_ddeg   = p->pan_ddeg;
+    cell->mech_tilt_ddeg  = p->tilt_ddeg;
+    cell->d_mm            = p->d_mm;
+    cell->signal_strength = p->signal_strength;
+    cell->device_time_ms  = p->device_time_ms;
+    cell->stm_ts_ms       = p->stm_ts_ms;
+    cell->dis_status      = p->dis_status;
+    cell->range_precision = p->range_precision;
+}
 ```
 
 계약 pan은 `0..3599`로 정규화한다. 셀에는 계약각과 STM32가 보낸 기구각을 모두 남겨
@@ -161,6 +321,36 @@ spread = d_max_mm - d_min_mm
 tolerance = max(30mm, d_min_mm × 15%)
 ```
 
+```c
+static bool cell_avg_ok(const struct scan_cell *cell)
+{
+    bool ok = false;
+
+    if (cell->n_samples >= 2u) {
+        const uint32_t spread =
+            (uint32_t)cell->d_max_mm - (uint32_t)cell->d_min_mm;
+        uint32_t tol =
+            ((uint32_t)cell->d_min_mm * CELL_AVG_REL_TOL_PCT) / 100u;
+        if (tol < CELL_AVG_ABS_TOL_MM) {
+            tol = CELL_AVG_ABS_TOL_MM;
+        }
+        ok = (spread <= tol);
+    }
+    return ok;
+}
+
+static uint16_t cell_distance_mm(const struct scan_cell *cell)
+{
+    uint16_t d = cell->d_mm;
+
+    if (cell_avg_ok(cell)) {
+        d = (uint16_t)((cell->d_sum_mm + ((uint32_t)cell->n_samples / 2u))
+                       / (uint32_t)cell->n_samples);
+    }
+    return d;
+}
+```
+
 샘플이 둘 이상이고 spread가 tolerance 이하이면 거리 합계를 샘플 수로 나눈 반올림
 평균을 사용한다. spread가 크면 셀 중심에 가장 가까운 대표 샘플의 거리를 그대로 쓴다.
 
@@ -176,6 +366,32 @@ tolerance = max(30mm, d_min_mm × 15%)
 - `WIDTH`, `HEIGHT`, `POINTS`는 전체 organized 격자 크기다.
 - `sensor_height_m`는 header 주석에만 쓰고 좌표에 더하지 않는다.
 - `ferror()`와 `fclose()`를 모두 확인한다.
+
+격자를 좌표로 투영하는 loop는 다음과 같다.
+
+```c
+for (size_t i = 0; i < n; ++i) {
+    const struct scan_cell *cell = &o->grid[i];
+    if (!cell->filled) {
+        (void)fputs("nan nan nan\n", fp);
+    } else {
+        const double pan  = DDEG2RAD(cell->pan_ddeg);
+        const double tilt = DDEG2RAD(cell->tilt_ddeg);
+        const double r =
+            (double)((int32_t)cell_distance_mm(cell) + o->lidar_offset_mm)
+            / 1000.0;
+        const double ct = cos(tilt);
+
+        (void)fprintf(fp, "%.4f %.4f %.4f\n",
+                      r * ct * sin(pan),
+                      -r * sin(tilt),
+                      r * ct * cos(pan));
+    }
+}
+
+const bool wr_ok = (ferror(fp) == 0);
+return (fclose(fp) == 0) && wr_ok;
+```
 
 버퍼 flush가 `fclose()`에서 실패할 수 있으므로 모든 `fprintf()`가 성공해도 close 실패를
 출력 실패로 처리한다.
@@ -194,6 +410,22 @@ tolerance = max(30mm, d_min_mm × 15%)
 - distance status histogram
 - 셀별 대표 샘플과 병합 분포
 
+header를 쓰기 전에 평균 거부 수를 확정한다. 진단 값이 뒤의 measurement loop 결과와
+어긋나지 않게 하는 선행 pass다.
+
+```c
+o->avg_refused = 0u;
+{
+    const size_t nc = (size_t)o->grid_rows * (size_t)o->grid_cols;
+    for (size_t k = 0; k < nc; ++k) {
+        const struct scan_cell *cell = &o->grid[k];
+        if ((cell->n_samples >= 2u) && !cell_avg_ok(cell)) {
+            o->avg_refused++;
+        }
+    }
+}
+```
+
 빈 셀은 측정 필드를 `null`, `samples = 0`, `valid = false`로 기록한다. 채운 셀은 대표
 샘플과 병합된 거리 통계를 함께 기록한다. writer는 `ferror()`와 `fclose()`를 확인한다.
 
@@ -210,6 +442,37 @@ write_json
   -> handle free
   -> caller pointer = NULL
   -> json_ok && pcd_ok 반환
+```
+
+```c
+bool scan_out_close(struct scan_out **po)
+{
+    if ((po == NULL) || (*po == NULL)) {
+        return false;
+    }
+
+    struct scan_out *o = *po;
+    const bool js_ok = write_json(o);
+    const bool pc_ok = write_pcd(o);
+
+    if (js_ok && pc_ok) {
+        core_log(o->log, "SCAN",
+                 "산출 완료 %ux%u — 유효 %u셀 (병합 %u, 평균거부 %u, 범위밖 %u)",
+                 o->grid_rows, o->grid_cols, o->pc_written,
+                 o->merged, o->avg_refused, o->drop_range);
+        core_log(o->log, "SCAN", "  JSON: %s", o->js_path);
+        core_log(o->log, "SCAN", "  PCD : %s", o->pc_path);
+    } else {
+        core_log(o->log, "SCAN",
+                 "핵심: 산출 실패 (JSON=%s PCD=%s) — 유효했던 %u셀은 복구 불가",
+                 js_ok ? "ok" : "FAIL", pc_ok ? "ok" : "FAIL", o->pc_written);
+    }
+
+    free(o->grid);
+    free(o);
+    *po = NULL;
+    return js_ok && pc_ok;
+}
 ```
 
 인자가 `NULL`이거나 이미 닫힌 핸들이면 `false`를 반환한다. 중단·종료 경로에서 여러 번

@@ -27,12 +27,12 @@ flowchart LR
   BIN --> INST[install-service.sh]
   KO --> INST
   DTBO --> INST
-  INST --> OPT[/opt/adts/adts_daemon]
-  INST --> MOD[/lib/modules/current/extra]
+  INST --> OPT["/opt/adts/adts_daemon"]
+  INST --> MOD["/lib/modules/current/extra"]
   INST --> BOOT[boot overlays and config.txt]
   INST --> UNIT[adts-daemon.service]
-  UNIT --> DEV[/dev/turret]
-  UNIT --> OUT[/var/lib/adts/scans]
+  UNIT --> DEV["/dev/turret"]
+  UNIT --> OUT["/var/lib/adts/scans"]
 ```
 
 이 문서는 다음 책임을 다룬다.
