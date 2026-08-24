@@ -95,9 +95,10 @@ RPi 한 대에서 포트 두 개를 쓴다는 점이 헷갈리기 쉽다.
 
 ### 4.1 실제로 오가는 토픽
 
-> ⚠️ **계약서는 `adts/kit1/...` 이지만 RPi 데몬 실구현에는 `kit1` 세그먼트가
-> 없다** (`daemon/modules/mqtt/mqtt_module.c`). 이 앱은 **실구현 쪽**에 맞췄다.
-> 계약서가 재확정되면 `src/MqttBridge.cpp` 상단 상수와 함께 고쳐야 한다.
+> 초기 계약서는 `adts/kit1/...` 였고 실구현에는 `kit1` 세그먼트가 없어 한동안 어긋나
+> 있었다. **브로커가 킷마다 상주하므로 `kit_id` 가 중복 정보**라는 판단으로 실구현 쪽이
+> 채택됐고, MQTT 계약 v1.4 가 `adts/...` 로 확정했다 (2026-08-24 확인). 바꾸려면
+> `src/MqttBridge.cpp` 상단 상수와 계약을 같이 고쳐야 한다.
 
 | 토픽 | 방향 | QoS | Retained | 페이로드 |
 |---|---|---|---|---|
@@ -240,14 +241,15 @@ Client ID 가 아니라 인증서 CN 으로 판정되므로(`use_identity_as_use
 | `true` | 작업이 멈췄고 사용자가 개입해야 한다 — 배너·모달 | 3 NOT_HOMED / 5 STALL / 6 LIDAR / 100 안전정지 / 101 홈 타임아웃 / 102 수평 NG / 105 산출 실패 |
 | `false` | 로그 한 줄이면 된다. 계속되거나 다시 시도하면 된다 | 1 BAD_CRC / 2 BAD_LEN / 4 OUT_OF_RANGE |
 
-### 4.4 REARM — 계약 외 확장
+### 4.4 REARM — DISARM 에서 빠져나오기
 
-계약 §5 표는 DISARM 상태의 "복구" 버튼을 규정하면서 대응 토픽을 비워뒀다. 그대로 두면
+초기 계약 표는 DISARM 상태의 "복구" 버튼을 규정하면서 대응 토픽을 비워뒀다. 그대로 두면
 **DISARM 을 한 번 누르는 순간 HOME/SCAN 이 영구히 비활성**이 되어 빠져나올 방법이 없다.
 그래서 DISARM 상태에서는 HOME 버튼이 `REARM` 으로 바뀌고 `adts/cmd/rearm` 을 발행한다.
 
-- RPi `develop` 브랜치 데몬(`core_rearm()`)이 이 토픽을 구독해 `DISARM → IDLE` 로
-  복구한다. **계약 문서 반영은 이현우 협의 대기.**
+- 데몬(`daemon/core/main.c` 의 `core_rearm()`)이 이 토픽을 구독해 `DISARM → IDLE` 로
+  복구한다. **처음에는 계약 외 확장이었으나 MQTT 계약 v1.4 에 정식 토픽으로 반영됐다**
+  (2026-08-24 확인).
 - 복구 가능 여부는 **데몬이 판정한다.** DISARM 이 아니거나 STM32 링크가 죽어 있으면
   거부하고 데몬 로그에 사유를 남긴다. Qt 는 미리 걸러내지 않는다 — 판정 기준이 두
   곳으로 갈라지는 것을 막기 위해서다. 거부되면 `state/daemon` 이 DISARM 그대로다.
@@ -582,7 +584,7 @@ mosquitto_sub -h <RPi IP> -p 8883 \
 | 문구에 붙는 사유 | 뜻 | 조치 |
 |---|---|---|
 | `SSL handshake failed: The host name did not match…` | 인증서 SAN 불일치 | §10.1 |
-| `HTTP 404` + `없는 경로입니다` | 발급 서비스에 `/scans` 라우트가 없다 — 옛 바이너리 | RPi `develop` 로 `adts_enroll` 재빌드·재배포 |
+| `HTTP 404` + `없는 경로입니다` | 발급 서비스에 `/scans` 라우트가 없다 — 옛 바이너리 | RPi `main` 으로 `adts_enroll` 재빌드·재배포 |
 | `HTTP 404` + `스캔 디렉터리가 없습니다` | `ADTS_SCAN_DIR` 을 서비스가 못 읽는다 | 아래 |
 
 마지막 건이 헷갈린다. 유닛(`broker/adts-enroll.service`)에 `ProtectHome=true` 가 걸려

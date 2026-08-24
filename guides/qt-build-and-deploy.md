@@ -379,7 +379,7 @@ hosts for this certificate` 로 핸드셰이크가 깨진다 — **브로커는 
 | 사유 | 뜻 | 조치 |
 |---|---|---|
 | `SSL handshake failed: The host name did not match…` | 인증서 SAN 불일치 | 위 `server_name` |
-| `HTTP 404` + `없는 경로입니다` | 발급 서비스에 `/scans` 라우트가 없다 — 옛 바이너리 | RPi `develop` 로 `adts_enroll` 재빌드·재배포 |
+| `HTTP 404` + `없는 경로입니다` | 발급 서비스에 `/scans` 라우트가 없다 — 옛 바이너리 | RPi `main` 으로 `adts_enroll` 재빌드·재배포 |
 | `HTTP 404` + `스캔 디렉터리가 없습니다` | `ADTS_SCAN_DIR` 을 서비스가 못 읽는다 | 아래 |
 
 마지막 건이 헷갈린다. 유닛(`broker/adts-enroll.service`)에 `ProtectHome=true` 가
