@@ -16,6 +16,7 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [components/yocto/](components/yocto/) | Yocto 이미지 빌드 — 레시피, 레이어 구성 |
 | [components/opensdk/](components/opensdk/) | Edge AI 카메라 Open Platform SDK |
 | [guides/](guides/) | 환경 설정, 빌드, 배포 절차 |
+| [users/](users/) | 팀원별 담당 범위와 작성 문서 목록 |
 
 ## 작성 규칙
 
