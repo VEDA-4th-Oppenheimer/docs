@@ -10,7 +10,8 @@
 | RPi 통합 데몬 | epoll FSM, heartbeat, `scan_output`, module ABI, MQTT module, 카메라 송신 client | `RPi` — `daemon/`, `shared/daemon_module.h` |
 | RPi 브로커 | Mosquitto 운영 설정과 CA·인증서 발급 script | `RPi` — `broker/` (송영빈과 공동) |
 | 카메라 연동 | organized JSON mTLS 송신과 wire contract의 RPi 측 | `RPi` — `daemon/modules/camera/` (카메라 app TCP server는 이영민) |
-| 빌드·배포 | 데몬 CMake, systemd unit, 커널 module·overlay 설치, 반복 스캔 운영 | `RPi` — `daemon/CMakeLists.txt`, `daemon/tools/`, `driver/Makefile` |
+| RPi 커널 빌드 | 대상 kernel 일치, module 3종·overlay 3종과 검사 도구 빌드 | `RPi` — `driver/Makefile`, `docker/` |
+| RPi 데몬 배포 | CMake, systemd unit, installer와 반복 스캔 운영 | `RPi` — `daemon/CMakeLists.txt`, `daemon/tools/` |
 | Yocto | 이미지·레이어·레시피·커널 module·DT 연결 설계와 문서화 | `yocto` — `meta-adts/`, `conf/` (빌드·flash 실행은 사용자 수행) |
 
 ## 작성 문서
@@ -30,7 +31,8 @@
 | [데몬 module ABI](../../components/rpi/daemon/modules.md) | 정적 module contract, callback 순서와 shared state ownership |
 | [스캔 산출물 생성기](../../components/rpi/daemon/scan-output.md) | 기구각 변환, 격자 indexing·병합, JSON·PCD writer 구현 |
 | [카메라 송신 module](../../components/rpi/daemon/camera.md) | `ST_EXPORT` mTLS upload, 설정 재로드, timeout·retry와 heartbeat 경계 |
-| [RPi 데몬 빌드·배포](../../guides/rpi-daemon-build-and-deploy.md) | CMake, kernel build, systemd, installer와 반복 scan 절차 |
+| [RPi 커널 빌드](../../guides/rpi-kernel-build.md) | target kernel 일치, module·DTBO·검사 도구 build와 검증 절차 |
+| [RPi 데몬 빌드·배포](../../guides/rpi-daemon-build-and-deploy.md) | CMake, systemd, installer와 반복 scan 절차 |
 | [Yocto 이미지](../../components/yocto/image.md) | build host, target image 구성과 재현성 기준 |
 | [Yocto 레이어와 레시피](../../components/yocto/layers-and-recipes.md) | layer 구성, `local.conf`, recipe·package 포함 관계 |
 | [Yocto 커널·DT 연결](../../components/yocto/kernel-drivers-dt.md) | out-of-tree module, DT overlay, `compatible`과 device node 생성 |

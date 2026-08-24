@@ -86,7 +86,8 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
-| [rpi-daemon-build-and-deploy.md](guides/rpi-daemon-build-and-deploy.md) | RPi 데몬 빌드·systemd·kernel module 설치와 반복 스캔 운영 | 이현우 |
+| [rpi-kernel-build.md](guides/rpi-kernel-build.md) | RPi 커널 모듈·DTBO build와 vermagic 검증 | 이현우 |
+| [rpi-daemon-build-and-deploy.md](guides/rpi-daemon-build-and-deploy.md) | RPi 데몬 CMake·systemd 설치와 반복 스캔 운영 | 이현우 |
 | [yocto-build.md](guides/yocto-build.md) | Yocto 이미지 빌드, SD 기록, 부팅 체크리스트 | 이현우 |
 | [qt-build-and-deploy.md](guides/qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 (macOS/Windows) | 송영빈 |
 | [broker-token-runbook.md](guides/broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 접속 끊기, 증상별 진단 | 송영빈 |

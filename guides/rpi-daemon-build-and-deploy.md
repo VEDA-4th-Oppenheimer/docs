@@ -1,32 +1,30 @@
 # RPi 데몬 빌드와 systemd 배포
 
-RPi 통합 데몬을 빌드하고 커널 모듈·Device Tree overlay·systemd unit과 함께 배포하는
-절차를 정리한다.
+RPi 통합 데몬을 빌드하고 사전에 준비한 커널 모듈·Device Tree overlay와 함께 systemd
+서비스로 배포하는 절차를 정리한다.
 
 | 항목 | 값 |
 |---|---|
 | 문서 ID | `ADTS-DMN-33` |
+| 담당 | 이현우 |
 | 기준 코드 | RPi `62f3d7b` (2026-08-24) |
 | 데몬 빌드 | `RPi/daemon/CMakeLists.txt` |
 | 서비스 | `RPi/daemon/adts-daemon.service` |
 | 설치 도구 | `RPi/daemon/tools/install-service.sh` |
 | 배치 도구 | `RPi/daemon/tools/scan_batch.sh` |
-| 드라이버 빌드 | `RPi/driver/Makefile` |
+| 배포 입력 | `adts_daemon`, `.ko` 3종, `.dtbo` 3종 |
 
 ## 배포 경계
 
-배포 경로는 런타임 코드, userspace 빌드, kernel build, boot 자산, 서비스 정책을 연결한다.
+이 문서는 daemon source에서 service 실행까지의 userspace build·배포 경계를 다룬다.
+커널 빌드가 만든 `.ko`·`.dtbo`는 installer의 입력으로만 취급한다.
 
 ```mermaid
 flowchart LR
   SRC[daemon source] --> CM[CMake]
   CM --> BIN[adts_daemon]
-  KS[kernel source and config] --> KM[driver Makefile]
-  KM --> KO[kernel modules]
-  KM --> DTBO[Device Tree overlays]
+  KART[kernel artifacts .ko and .dtbo] --> INST
   BIN --> INST[install-service.sh]
-  KO --> INST
-  DTBO --> INST
   INST --> OPT["/opt/adts/adts_daemon"]
   INST --> MOD["/lib/modules/current/extra"]
   INST --> BOOT[boot overlays and config.txt]
@@ -38,14 +36,13 @@ flowchart LR
 이 문서는 다음 책임을 다룬다.
 
 - `adts_daemon`의 compile·link 정책과 조건부 기능
-- Raspberry Pi 대상 kernel module·test application·DTBO 빌드
-- 실행 중 모듈과 부팅 overlay를 함께 갱신하는 설치 절차
+- 준비된 kernel module과 boot overlay를 daemon과 함께 설치하는 절차
 - systemd의 장치 준비, 출력 디렉터리, 재시작, 권한 축소 정책
 - 반복 스캔의 timeout·종료 코드·로그 수집 규칙
-- RPi 저장소의 CI gate
+- daemon build CI gate
 
-Yocto recipe, STM32 firmware flash, broker 인증서 발급, Qt package 배포는 별도 수명주기를
-가지므로 이 절차에서 생성하지 않는다.
+kernel module·DTBO build, Yocto recipe, STM32 firmware flash, broker 인증서 발급, Qt
+package 배포는 별도 수명주기를 가지므로 이 절차에서 생성하지 않는다.
 
 ## 데몬 CMake 빌드
 
@@ -101,42 +98,6 @@ binary는 configure log에서 `카메라 업로드: mTLS 활성`과 `MQTT: 활�
 cmake -S daemon -B daemon/build-notls \
   -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON
 cmake --build daemon/build-notls
-```
-
-## 드라이버와 overlay 빌드
-
-`driver/Makefile`은 kernel space 산출물과 user space 검사 도구를 함께 관리한다.
-
-| target | 산출물 |
-|---|---|
-| `modules` | `turret_driver.ko`, `imu_driver.ko`, `led_sw_driver.ko` |
-| `dtbo` | `driver/overlays/*-overlay.dtbo` |
-| `apps` | `turret_test`, `imu_test`, `led_sw_test`, `encoder_jitter_test` |
-| `all` | `dtbo`, `modules`, `apps` 전체 |
-| `rpi` | ARM64 cross variables를 적용한 `all` |
-
-RPi 실기에서 실행 중인 kernel의 build tree를 사용할 때는 다음과 같이 빌드한다.
-
-```bash
-make -C driver
-```
-
-개발 container에서 Raspberry Pi kernel source를 사용할 때는 `RPI_KDIR`, architecture,
-cross compiler가 대상과 일치해야 한다.
-
-```bash
-make -C driver rpi \
-  RPI_KDIR=/usr/src/linux \
-  RPI_ARCH=arm64 \
-  RPI_CROSS=aarch64-linux-gnu-
-```
-
-Apple Silicon ARM64 container처럼 compiler target이 이미 ARM64이면 `RPI_CROSS=`로 둘 수
-있다. `.ko`의 vermagic은 배포 대상 `uname -r`과 일치해야 한다.
-
-```bash
-modinfo -F vermagic driver/turret_driver.ko
-uname -r
 ```
 
 ## systemd 서비스
@@ -201,8 +162,8 @@ systemd가 `/var/lib/adts/scans`를 service account 소유로 생성한다. 데�
 
 ### 입력과 option
 
-`install-service.sh`는 root 권한으로 RPi에서 실행한다. 시작 전에 daemon binary와 필요한
-`.ko`·`.dtbo`를 빌드한다.
+`install-service.sh`는 root 권한으로 RPi에서 실행한다. 시작 전에 daemon binary와 배포할
+`.ko`·`.dtbo`가 각 출력 경로에 준비돼 있어야 한다.
 
 ```bash
 sudo bash daemon/tools/install-service.sh [--daemon-only] [--no-start]
@@ -311,18 +272,13 @@ GNU `timeout`이 있으면 먼저 SIGINT를 보내고 20초 뒤에도 종료하�
 
 ## CI gate
 
-`.github/workflows/static_analysis.yml`은 `main` push와 `main` 대상 pull request에서 세
-job을 실행한다. Markdown·`docs/`만 바뀐 main push는 건너뛰지만 pull request에는 path
-제외를 적용하지 않는다.
+`.github/workflows/static_analysis.yml`의 `daemon-analysis`는 `main` push와 `main` 대상
+pull request에서 실행된다. Markdown·`docs/`만 바뀐 main push는 건너뛰지만 pull
+request에는 path 제외를 적용하지 않는다.
 
 | job | 검사 |
 |---|---|
-| `driver-analysis` | driver·shared cppcheck, `turret_test` GCC warning gate |
 | `daemon-analysis` | OpenSSL 포함 CMake build, cppcheck, `ADTS_NO_TLS` build |
-| `broker-analysis` | broker CMake build와 cppcheck |
-
-kernel module compile은 CI runner의 대상 kernel header·configuration과 결합하지 않는다.
-`.ko` 변경은 대상 RPi 또는 준비된 kernel tree에서 별도로 빌드하고 vermagic을 확인한다.
 
 ## 운영 확인
 
