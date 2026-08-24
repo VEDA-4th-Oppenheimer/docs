@@ -47,6 +47,7 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [driver/imu.md](components/rpi/driver/imu.md) | ICM-20948 수평 기준 — DT 오버레이, 커널 드라이버, `/dev/imu` 계약 | 송영빈 |
 | [broker-enroll.md](components/rpi/broker-enroll.md) | `/enroll` 발급 서비스 — 1회용 토큰, 인증서 서명, ACL 자동 등록, 스캔 조회 | 송영빈 |
 | [driver/turret.md](components/rpi/driver/turret.md) | `/dev/turret` 커널 드라이버 — serdev, kfifo 스캔 스트림, ioctl ABI | 이현우 |
+| [daemon/core.md](components/rpi/daemon/core.md) | 통합 데몬 코어 — epoll FSM, heartbeat, 스캔 생명주기, 수평 게이트 | 이현우 |
 
 ### 인터페이스 계약
 

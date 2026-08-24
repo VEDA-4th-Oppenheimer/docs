@@ -7,5 +7,6 @@
 |---|---|
 | [driver/](driver/) — `/dev/imu`·`/dev/turret` 커널 드라이버 | 송영빈 / 이현우 |
 | [broker-enroll.md](broker-enroll.md) — `/enroll` 인증서·설정 발급 서비스 | 송영빈 |
+| [daemon/](daemon/) — 데몬 코어 epoll FSM · 스캔 생명주기 | 이현우 |
 
 소스 저장소의 주요 하위 계층과 같은 이름으로 문서 폴더를 구성한다.
