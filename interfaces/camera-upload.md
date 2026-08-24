@@ -146,13 +146,12 @@ TLS는 전송 중 기밀성과 무결성을 제공한다. 수신 파일을 영�
 
 ## 검증 기준선
 
-2026-08-24 ARM64 Linux에서 실제 RPi 카메라 모듈과 참조 수신기를 연결해 확인했다.
+2026-08-24 ARM64 Linux에서 RPi 송신 구현의 build와 정적분석을 확인했다. 카메라 수신
+애플리케이션 또는 개발용 수신기와의 E2E 전송은 이 기준선에 포함하지 않는다.
 
 | 항목 | 결과 |
 |---|---|
-| 정상 mTLS 전송 | TLS AES-256-GCM, client CN `adts-daemon` |
-| 동일 JSON 경로 재호출 | 두 번째 전송 억제 |
-| 서버 SAN `wrong-camera` | hostname mismatch로 거부 |
-| 같은 cert/key 경로의 인증서 교체 | 재시작 없이 새 client CN 반영 |
-| 응답 공백·오탐 단위 검사 | 정확한 `result: "ok"`만 수락 |
-| 안전 파일명 단위 검사 | 경로 순회·구분자·비ASCII 거부 |
+| GNU 13.3, C11, OpenSSL·MQTT 활성 build | 통과 |
+| `ADTS_NO_TLS` build | 통과 |
+| cppcheck 2.13, camera module 포함 daemon 6개 translation unit | 통과 |
+| 와이어 형식·제한값과 송신 구현 대조 | 일치 |

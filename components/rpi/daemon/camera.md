@@ -188,9 +188,10 @@ PONG 기준 시각을 현재로 옮겨 동기 전송 시간을 링크 단절로 
 산출물이 없거나 업로드가 비활성인 경우, 이미 성공한 동일 경로인 경우에는 네트워크
 작업 없이 반환하므로 heartbeat 기준 시각도 바꾸지 않는다.
 
-## 참조 수신기
+## 개발용 수신기 예제
 
-`RPi/daemon/tools/fake_camera.py`는 카메라 없이 송신 경로를 검증하는 TLS 서버다.
+`RPi/daemon/tools/fake_camera.py`는 카메라 없이 프로토콜을 수동 점검할 수 있도록 저장소에
+포함된 TLS server example이다.
 
 - TLS 1.2 이상과 `CERT_REQUIRED`를 적용한다.
 - 클라이언트 CN이 `adts-daemon`인지 확인한다.
@@ -207,6 +208,8 @@ python3 daemon/tools/fake_camera.py \
   --once
 ```
 
+이 도구는 현재 검증 기준선에서 실행한 E2E 시험 근거로 사용하지 않는다.
+
 ## 검증
 
 2026-08-24 ARM64 Linux에서 다음을 확인했다.
@@ -214,11 +217,6 @@ python3 daemon/tools/fake_camera.py \
 | 항목 | 결과 |
 |---|---|
 | GNU 13.3, C11, `-Wall -Wextra -Werror` 전체 빌드 | 통과 |
-| core·scan output·모듈 4종 cppcheck | 통과 |
-| `ADTS_NO_TLS` GNU C11 단독 컴파일 | 통과 |
-| Python bytecode compile·안전 파일명 검사 | 통과 |
-| 응답 판정 공백·오탐 검사 | 통과 |
-| camera 모듈 → 참조 수신기 mTLS 전송 | 성공 |
-| 동일 경로 재호출 | 두 번째 업로드 억제 |
-| 잘못된 서버 SAN | hostname mismatch로 거부 |
-| 같은 경로의 클라이언트 인증서 교체 | 재시작 없이 새 CN 반영 |
+| cppcheck 2.13, camera module 포함 daemon 6개 translation unit | 통과 |
+| `ADTS_NO_TLS` GNU C11 build | 통과 |
+| 설정·재시도·응답 판정 경로 source 대조 | 일치 |
