@@ -46,11 +46,15 @@ MQTT 제어, Qt 관제, STM32 모터 구동 및 PCD 다운로드는 OpenSDK 앱�
 | `tcp_server` | mTLS 연결, JSON 파일 수신·검증·저장, 서버 상태 표시 | `704fbd1`에 포함; 공개본 1.0과 로컬 1.2의 저장 경로가 다름 |
 | `sam_segmentation` | 4채널 Snapshot, MobileSAM encoder·decoder 추론, 마스크 시각화 | `704fbd1`에 포함 |
 | `lsd_line_detection` | `app/res`의 JPEG에 LSD를 적용하고 결과 이미지를 저장 | `704fbd1`에 포함; `LSD_REFINE_STD` 사용 |
-| `calibration` | 세션 JSON 선택, 4채널 Snapshot, 채널 1 staging, Core 실행 | `a0832b6`에 포함; `d94b862`에 팀원의 알고리즘 갱신 포함 |
+| `calibration` | 세션 JSON 선택, 4채널 Snapshot, 채널 1 staging, Core 실행 | 앱은 `a0832b6`; 광진의 `d94b862`는 낮은 버전 auto_calib Core를 최신 Core 기준으로 업데이트 |
 | `vision_preprocessing` | 4채널 Grayscale·Gaussian·CLAHE·Sharpening | 별도 로컬 작업본이며 공개 OpenSDK Git 트리에 없음 |
 
-`d94b862`의 최신 targetless 알고리즘 갱신은 팀원 커밋이다. 카메라 앱 구성과 Core
-이식·운영 통합을 담당한 이영민의 공개 커밋은 `704fbd1`, `a0832b6`이다.
+OpenSDK의 calibration CAP 자체와 앱 통합은 다른 팀원이 작성한 범위다. 광진의
+`d94b862`는 그 CAP에 포함되어 있던 낮은 버전 auto_calib Core를 최신
+`auto_calib/develop` 변경에 맞춰 동기화한 커밋이다. 따라서 `d94b862`를 OpenSDK 앱,
+MobileSAM, LSD, TCP server 또는 Core 알고리즘의 최초 설계 커밋으로 해석하지 않는다.
+카메라 앱 구성과 Core 이식·운영 통합을 담당한 이영민의 공개 커밋은 `704fbd1`,
+`a0832b6`이다.
 
 ## CAP 프로젝트의 공통 구조
 

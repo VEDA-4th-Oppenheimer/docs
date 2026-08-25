@@ -13,3 +13,4 @@
 | [qt-build-and-deploy.md](qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 | 송영빈 |
 | [broker-token-runbook.md](broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 증상별 진단 | 송영빈 |
 | [opensdk-build-and-deploy.md](opensdk-build-and-deploy.md) | CV5 Docker·CMake 빌드, 의존성 교차 컴파일, CAP 패키징과 배포 점검 | 이영민 |
+| [jenkins-calibration-reproducibility.md](jenkins-calibration-reproducibility.md) | 현재 CCTV/LiDAR 수집·package pairing과 후속 Calibration test 재현성 계획 | 광진 |
