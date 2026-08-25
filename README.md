@@ -85,6 +85,22 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 |---|---|---|
 | [overview.md](components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT, 화면·조작, 포인트클라우드, 트러블슈팅 | 송영빈 |
 
+### OpenSDK 카메라 애플리케이션
+
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [architecture.md](components/opensdk/architecture.md) | CV5 OpenSDK 앱 구성, LifeCycleManager·AppDispatcher, 4채널 Snapshot과 CAP 간 데이터 경계 | 이영민 |
+| [vision-preprocessing.md](components/opensdk/vision-preprocessing.md) | VPT-31 영상 전처리, VPT-92 LSD·NFA 구조선과 공개 LSD 앱 구현 차이 | 이영민 |
+| [mobile-sam.md](components/opensdk/mobile-sam.md) | MobileSAM encoder·decoder ONNX, 8×8 prompt, OpenCV DNN과 4채널 마스크 | 이영민 |
+| [tcp-server.md](components/opensdk/tcp-server.md) | LiDAR JSON mTLS 수신, 파일 framing·검증, 세션 저장과 송수신 계약 차이 | 이영민 |
+| [calibration-app.md](components/opensdk/calibration-app.md) | JSON 선택, 4채널 Snapshot, 채널 1 staging, Core 실행과 후보 결과 판정 | 이영민 |
+
+### 자동 캘리브레이션
+
+| 문서 | 내용 | 담당 |
+|---|---|---|
+| [cv5-optimization.md](components/calibration/cv5-optimization.md) | staged 탐색, 렌즈 왜곡 보정, Cortex-A76·NEON·Ceres 최적화와 검증 경계 | 이영민 |
+
 ### 가이드
 
 | 문서 | 내용 | 담당 |
@@ -95,3 +111,4 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [yocto-build.md](guides/yocto-build.md) | Yocto 이미지 빌드, SD 기록, 부팅 체크리스트 | 이현우 |
 | [qt-build-and-deploy.md](guides/qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 (macOS/Windows) | 송영빈 |
 | [broker-token-runbook.md](guides/broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 접속 끊기, 증상별 진단 | 송영빈 |
+| [opensdk-build-and-deploy.md](guides/opensdk-build-and-deploy.md) | CV5 Docker·CMake 빌드, OpenCV/Ceres 교차 컴파일, CAP 배포와 mTLS 운영 점검 | 이영민 |
