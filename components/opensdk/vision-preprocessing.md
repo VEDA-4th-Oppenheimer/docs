@@ -1,21 +1,27 @@
-# CCTV 영상 전처리와 LSD 구조선 검출
+# 추가 검증용 CCTV 영상 전처리와 LSD 구조선 검출
 
 VPT-31 영상 전처리, VPT-92 구조선 검출 및 OpenSDK `lsd_line_detection` CAP의 구현
 범위를 구분해 정리한다. 기준은 2026-08-04의 VPT-31/VPT-92 독립 구현, 2026-08-24
 로컬 `vision_preprocessing` 작업본과 OpenSDK 공개 커밋 `704fbd1`(2026-08-19)이다.
+
+`vision_preprocessing`, VPT-31/VPT-92와 `lsd_line_detection`은 **현재 A.D.T.S 자동
+캘리브레이션 구조에서 사용하지 않는다.** 영상 전처리와 구조선 검출 동작을 각각
+확인하기 위한 추가 검증용 독립 구현이다. 생성한 GRAY8 영상, LSD 선분, NFA와 overlay는
+`calibration` 또는 `run_real_calibration`의 입력·목적함수·결과 판정에 전달되지 않는다.
 
 | 구현 | 담당 범위 | 입력 | 출력 |
 |---|---|---|---|
 | VPT-31 라이브러리 | 입력 정규화와 영상 전처리 | BGR/BGRA/GRAY 프레임 | `CV_8UC1` 영상과 원본 프레임 메타데이터 |
 | `vision_preprocessing` | VPT-31 흐름의 4채널 OpenSDK 적용 | CH1~CH4 JPEG Snapshot | 단계별 JPEG, 최종 GRAY8, 처리 CSV |
 | VPT-92 라이브러리 | LSD·NFA 구조선 추출과 필터링 | VPT-31의 `CV_8UC1` | 선분 좌표·점수·방향 JSON과 overlay |
-| `lsd_line_detection` | OpenSDK에서 기본 LSD 선분 표시 | `app/res/*.jpg`, `*.jpeg` | `storage/lsd_results/lsd_<원본명>` |
+| `lsd_line_detection` | 추가 검증용 OpenSDK 기본 LSD 선분 표시 | `app/res/*.jpg`, `*.jpeg` | `storage/lsd_results/lsd_<원본명>` |
 
 `vision_preprocessing`과 VPT-92 기준 구현은 확인된 로컬 작업본이다. 2026-08-24 공개
-OpenSDK 저장소에 포함된 앱은 `lsd_line_detection`이며, 고급 NFA 파이프라인이 해당
-CAP에 이미 통합되었다고 표현하면 안 된다.
+OpenSDK 저장소에 포함된 앱은 `lsd_line_detection`이며, 현재 캘리브레이션 구조에는
+연결되지 않는다. 고급 NFA 파이프라인이 해당 CAP이나 Calibration Core에 이미
+통합되었다고 표현하면 안 된다.
 
-## 전처리 파이프라인
+## 독립 추가 검증 파이프라인
 
 ```text
 CH1~CH4 Snapshot 또는 BGR/BGRA/GRAY 입력
@@ -188,6 +194,7 @@ normal_angle_deg = canonical_angle(angle_deg + 90)
 ## 공개 LSD CAP과 VPT-92의 차이
 
 OpenSDK 공개 `lsd_line_detection` 앱은 다음 경로만 구현한다.
+이 앱은 현재 자동 캘리브레이션 실행 경로에서 호출되지 않는 독립 검증 CAP이다.
 
 ```cpp
 cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
@@ -207,11 +214,13 @@ detector->drawSegments(image, lines);
 | 4채널 Snapshot 직접 입력 | 별도 OpenSDK 어댑터 필요 | 미구현 |
 
 공개 CAP을 VPT-92 수준으로 확장하려면 `LSD_REFINE_ADV`, NFA 출력, 프레임
-메타데이터, Snapshot 연결 및 JSON 증적을 앱 코드에 명시적으로 이식해야 한다.
+메타데이터, Snapshot 연결 및 JSON 증적을 앱 코드에 명시적으로 이식해야 한다. 이후
+자동 캘리브레이션에 사용하려면 Core 입력·목적함수·품질 gate와의 별도 인터페이스 설계와
+통합 검증도 필요하다.
 
 ## 확인된 검증 범위
 
 VPT-31/VPT-92 독립 테스트는 Grayscale/Gaussian 결과, 메타데이터 보존, CLAHE와
 Sharpening 적용, 합성 수평·수직 선분 반복성, 빈 이미지와 컬러 입력 거부를 검사한다.
-다만 해당 테스트 통과가 공개 LSD CAP의 NFA 기능 또는 실제 CV5 4채널 통합시험 통과를
-의미하지는 않는다.
+다만 해당 테스트 통과가 공개 LSD CAP의 NFA 기능, 실제 CV5 4채널 통합시험 또는 현재
+자동 캘리브레이션 기능 검증 통과를 의미하지는 않는다.

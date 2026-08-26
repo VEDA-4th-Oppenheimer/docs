@@ -1,12 +1,19 @@
-# CV5 MobileSAM 4채널 세그멘테이션
+# 추가 검증용 CV5 MobileSAM 4채널 세그멘테이션
 
 `sam_segmentation` OpenSDK 앱이 CV5 카메라의 4채널 Snapshot에 MobileSAM을
 적용하는 구조를 정리한다. 기준 코드는 OpenSDK `704fbd1`(2026-08-19)이며 모델 변환
 및 CV5 실행 기록은 앱의 개발 정리와 동일 시점 구현을 기준으로 한다.
 
+이 앱은 **현재 A.D.T.S 자동 캘리브레이션 구조에서 사용하지 않는다.** CV5에서
+MobileSAM ONNX가 OpenCV DNN으로 실행되는지와 4채널 Snapshot에 마스크를 생성할 수
+있는지를 추가로 검증하기 위한 독립 CAP이다. `tcp_server`, `/tmp/calibration`,
+`calibration`, `run_real_calibration`과 데이터를 주고받지 않는다.
+
 | 항목 | 값 |
 |---|---|
 | 애플리케이션 | `sam_segmentation` |
+| 현재 통합 구조 사용 여부 | 사용하지 않음 |
+| 용도 | CV5 ONNX·OpenCV DNN·4채널 Snapshot의 추가 검증 |
 | 추론 엔진 | OpenCV 4.12 DNN |
 | 카메라 입력 | SDK 채널 `0~3`의 JPEG Snapshot |
 | 모델 입력 크기 | `1024 × 1024` |
@@ -15,6 +22,32 @@
 | 마스크 후보 | prompt당 3개, `256 × 256` |
 | 실행 구조 | Snapshot 후 별도 worker에서 채널별 순차 추론 |
 | 출력 | 채널별 반투명 마스크 JPEG와 처리 CSV |
+
+## 현재 프로젝트 구조에서의 위치
+
+현재 자동 캘리브레이션과 MobileSAM 검증 경로는 다음처럼 분리되어 있다.
+
+```text
+현재 자동 캘리브레이션 경로
+RPi LiDAR JSON
+  -> tcp_server
+  -> /tmp/calibration/<session>
+  -> calibration
+  -> CH1 Snapshot + LiDAR JSON
+  -> run_real_calibration
+  -> 후보 외부 파라미터 / 거절 결과
+
+추가 검증 경로
+사용자 요청
+  -> sam_segmentation 독립 CAP
+  -> CH1~CH4 Snapshot
+  -> MobileSAM ONNX 추론
+  -> 마스크 JPEG / 처리 CSV
+```
+
+MobileSAM 마스크는 Calibration Core의 영상 입력을 대체하지 않고, 2D edge·구조선,
+NID/NMI, Ceres refinement나 결과 gate에도 전달되지 않는다. 향후 별도 설계와 검증을
+거쳐 통합할 수는 있지만 현재 문서와 구현에서 통합 완료로 간주하지 않는다.
 
 ## 모델 분리와 실행 파일
 
@@ -69,7 +102,7 @@ Slice shape 오류가 발생했다. 해당 경로를 없앤 뒤에는 출력 선
 이는 해당 변환 검증 입력의 결과이며 모든 입력이나 CV5 전체 성능을 보증하는 수치는
 아니다.
 
-## 4채널 처리 흐름
+## 독립 추가 검증 실행 흐름
 
 ```mermaid
 sequenceDiagram
@@ -176,5 +209,6 @@ OpenCV 4.10과 4.12를 한 CAP에 섞거나 x86-64 Linux 라이브러리를 넣�
 | 결과 이미지가 생성되지 않음 | Snapshot 권한, 채널 mapping, worker 로그 및 출력 디렉터리 |
 | 장치 추론이 지나치게 느림 | prompt 개수, 모델 크기, CPU·온도와 채널별 CSV 시간 |
 
-CV5 CAP 실행, ONNX load/forward, 64개 prompt와 결과 표시 기록은 확인했다. 실제
-처리량과 지연 시간은 동일한 카메라·입력 해상도·온도 조건에서 별도로 계측해야 한다.
+CV5 CAP 실행, ONNX load/forward, 64개 prompt와 결과 표시 기록은 추가 검증 결과로
+확인했다. 이는 현재 자동 캘리브레이션의 기능 또는 성능 검증 결과가 아니다. 독립 CAP의
+실제 처리량과 지연 시간은 동일한 카메라·입력 해상도·온도 조건에서 별도로 계측해야 한다.

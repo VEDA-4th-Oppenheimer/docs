@@ -90,8 +90,8 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [architecture.md](components/opensdk/architecture.md) | CV5 OpenSDK 앱 구성, LifeCycleManager·AppDispatcher, 4채널 Snapshot과 CAP 간 데이터 경계 | 이영민 |
-| [vision-preprocessing.md](components/opensdk/vision-preprocessing.md) | VPT-31 영상 전처리, VPT-92 LSD·NFA 구조선과 공개 LSD 앱 구현 차이 | 이영민 |
-| [mobile-sam.md](components/opensdk/mobile-sam.md) | MobileSAM encoder·decoder ONNX, 8×8 prompt, OpenCV DNN과 4채널 마스크 | 이영민 |
+| [vision-preprocessing.md](components/opensdk/vision-preprocessing.md) | 추가 검증용 영상 전처리·LSD CAP — 현재 캘리브레이션 구조에는 미사용, VPT-31/92와 공개 앱 구현 차이 | 이영민 |
+| [mobile-sam.md](components/opensdk/mobile-sam.md) | 추가 검증용 MobileSAM CAP — 현재 캘리브레이션 구조에는 미사용, ONNX·OpenCV DNN·4채널 마스크 검증 | 이영민 |
 | [tcp-server.md](components/opensdk/tcp-server.md) | LiDAR JSON mTLS 수신, 파일 framing·검증, 세션 저장과 송수신 계약 차이 | 이영민 |
 | [calibration-app.md](components/opensdk/calibration-app.md) | JSON 선택, 4채널 Snapshot, 채널 1 staging, Core 실행과 후보 결과 판정 | 이영민 |
 
