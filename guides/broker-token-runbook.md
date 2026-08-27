@@ -21,7 +21,7 @@
 sudo bash /opt/adts/gen-certs.sh --new-token Youngbin
 ```
 
-라벨(`youngbin`)이 **CN 접미사**가 된다 — 발급되면 `qt-console-youngbin` 이다. 영숫자와
+라벨(`Youngbin`)이 **CN 접미사**가 된다 — 발급되면 `qt-console-Youngbin` 이다. 영숫자와
 `.` `_` `-` 만 쓸 수 있고, 라벨 검사는 이 시점에 한다.
 
 출력에 그대로 전달하면 되는 안내문이 나온다.
@@ -51,8 +51,8 @@ sudo bash /opt/adts/gen-certs.sh --list-tokens
 ```
 미사용 토큰 (/etc/adts/enroll_tokens)
 ─────────────────────────────────────────────
-  youngbin             3f9a1c…8b2e
-  hyunwoo              b70e42…c015
+  Youngbin             3f9a1c…8b2e
+  Hyunwoo              b70e42…c015
 ```
 
 **토큰 전문은 안 찍는다** — 앞 6자와 뒤 4자만 나온다. 화면이나 터미널 로그에 남으면 그
@@ -83,8 +83,8 @@ sudo journalctl -u adts-enroll -n 30 --no-pager
 정상이면 로그에 이렇게 남는다.
 
 ```
-INFO  ACL 에 qt-console-youngbin 추가
-INFO  발급 완료: CN=qt-console-youngbin device=youngbin-macbook from=172.20.32.55
+INFO  ACL 에 qt-console-Youngbin 추가
+INFO  발급 완료: CN=qt-console-Youngbin device=youngbin-macbook from=172.20.32.55
 ```
 
 ## 5. 접속 끊기 (사람이 나갔을 때)
