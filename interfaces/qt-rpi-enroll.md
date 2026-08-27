@@ -79,7 +79,7 @@ Host: <RPi_IP>
 Content-Type: application/json
 Content-Length: <필수>
 
-{"token": "3f9a1c…", "device_name": "youngbin-macbook"}
+{"token": "3f9a1c…", "device_name": "Youngbin-macbook"}
 ```
 
 | 필드 | 필수 | 비고 |
