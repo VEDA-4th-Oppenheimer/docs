@@ -18,7 +18,7 @@
 ## 1. 팀원 한 명에게 권한 주기
 
 ```bash
-sudo bash /opt/adts/gen-certs.sh --new-token youngbin
+sudo bash /opt/adts/gen-certs.sh --new-token Youngbin
 ```
 
 라벨(`youngbin`)이 **CN 접미사**가 된다 — 발급되면 `qt-console-youngbin` 이다. 영숫자와
@@ -61,7 +61,7 @@ sudo bash /opt/adts/gen-certs.sh --list-tokens
 ## 3. 회수
 
 ```bash
-sudo bash /opt/adts/gen-certs.sh --revoke youngbin
+sudo bash /opt/adts/gen-certs.sh --revoke Youngbin
 ```
 
 해당 라벨의 **미사용** 토큰만 지운다. 이미 발급이 끝난 사람에게는 아무 영향이 없다 —
@@ -71,10 +71,10 @@ sudo bash /opt/adts/gen-certs.sh --revoke youngbin
 
 ```bash
 # 인증서가 생겼나
-sudo ls -l /etc/adts/certs/qt-console-youngbin.*
+sudo ls -l /etc/adts/certs/qt-console-Youngbin.*
 
 # ACL 에 블록이 붙었나
-sudo grep -A3 'user qt-console-youngbin' /etc/mosquitto/conf.d/adts.acl
+sudo grep -A3 'user qt-console-Youngbin' /etc/mosquitto/conf.d/adts.acl
 
 # 서비스 로그
 sudo journalctl -u adts-enroll -n 30 --no-pager
@@ -92,7 +92,7 @@ INFO  발급 완료: CN=qt-console-youngbin device=youngbin-macbook from=172.20.
 ACL 에서 해당 블록을 지우고 브로커를 다시 읽힌다.
 
 ```bash
-sudo nano /etc/mosquitto/conf.d/adts.acl      # user qt-console-youngbin 블록 4줄 삭제
+sudo nano /etc/mosquitto/conf.d/adts.acl      # user qt-console-Youngbin 블록 4줄 삭제
 sudo systemctl reload mosquitto
 ```
 

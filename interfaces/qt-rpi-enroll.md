@@ -93,7 +93,7 @@ Content-Length: <필수>
 ### 4.2 응답 (200)
 
 ```json
-{"cn":"qt-console-youngbin",
+{"cn":"qt-console-Youngbin",
  "ca_crt":"-----BEGIN CERTIFICATE-----\n…",
  "client_crt":"-----BEGIN CERTIFICATE-----\n…",
  "client_key":"-----BEGIN RSA PRIVATE KEY-----\n…",
