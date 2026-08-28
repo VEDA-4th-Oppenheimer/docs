@@ -79,7 +79,7 @@ Host: <RPi_IP>
 Content-Type: application/json
 Content-Length: <필수>
 
-{"token": "3f9a1c…", "device_name": "youngbin-macbook"}
+{"token": "3f9a1c…", "device_name": "Youngbin-macbook"}
 ```
 
 | 필드 | 필수 | 비고 |
@@ -93,7 +93,7 @@ Content-Length: <필수>
 ### 4.2 응답 (200)
 
 ```json
-{"cn":"qt-console-youngbin",
+{"cn":"qt-console-Youngbin",
  "ca_crt":"-----BEGIN CERTIFICATE-----\n…",
  "client_crt":"-----BEGIN CERTIFICATE-----\n…",
  "client_key":"-----BEGIN RSA PRIVATE KEY-----\n…",

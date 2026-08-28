@@ -4,6 +4,13 @@
 실행하는 OpenSDK 전용 CAP이다. 기준 코드는 OpenSDK `a0832b6`, `d94b862`
 (2026-08-24) 및 같은 날짜의 로컬 `calibration` 1.2 작업본이다.
 
+이 문서에서 OpenSDK 기여는 두 층으로 나누어 기록한다. CAP의 웹 화면·Snapshot·작업
+큐·상태 관리 구조는 다른 팀원이 작성한 OpenSDK 애플리케이션 범위다. 광진의
+`d94b862`는 그 앱에 포함되어 있던 구버전 auto_calib Core를 `auto_calib/develop`의
+알고리즘 업데이트에 맞춰 갱신하고, 실행 옵션과 K+D 입력 프로파일을 동기화한
+downstream 업데이트다. OpenSDK 앱, MobileSAM, LSD, TCP server를 새로 개발했다는
+의미로 해석하지 않는다.
+
 | 항목 | 값 |
 |---|---|
 | 앱 역할 | 세션 선택, 영상 취득, Core 실행과 후보 결과 관리 |
@@ -50,6 +57,114 @@ sequenceDiagram
 
 JSON 도착만으로 자동 실행하지 않는다. 운영자가 웹 목록에서 파일을 선택하고 시작을
 눌러야 Snapshot과 Core 작업이 시작된다.
+
+## auto_calib Core 버전 차이와 업데이트 범위
+
+### 문제 정의
+
+기존 OpenSDK `calibration` CAP에는 다른 팀원이 OpenSDK 실행 환경에 맞춰 이식한
+auto_calib Core 사본이 들어 있었다. 이 사본의 Core 버전이 `auto_calib/develop`의
+후속 알고리즘 변경보다 낮았기 때문에, 자동 캘리브레이션을 최신 Core 기준으로
+재현하려면 OpenSDK 쪽의 소스·헤더·실행기·설정 프로파일을 함께 갱신해야 했다.
+
+이 문제는 OpenSDK 애플리케이션의 기능 부족을 새로 설계한 것이 아니라, 같은
+캘리브레이션 Core를 서로 다른 저장소에서 유지하면서 발생한 버전 편차를 해소한
+문제다.
+
+### 광진이 수행한 업데이트
+
+`d94b8625139e120b091ee267ca210af214a29fe0`은 다음 변경을 하나의 downstream 동기화
+커밋으로 반영했다.
+
+| 변경 영역 | 반영 내용 | 의미 |
+|---|---|---|
+| Core header/source | `calibration_core.hpp`, `calibration_core.cpp`를 최신 Core 흐름에 맞춰 갱신 | OpenSDK에 남아 있던 낮은 버전의 계산·검증 로직을 최신 upstream 기준으로 맞춤 |
+| 실행기 | `run_real_calibration.cpp` 갱신 | 최신 Core 입력, 탐색 모드, 결과 계약을 OpenSDK 실행 경로에서 사용 |
+| 탐색 | staged coarse-to-fine 탐색 반영 | 과거 전수 탐색 경로 대신 coarse 후보에서 local/Ceres 단계로 좁히는 최신 실행 모드 사용 |
+| 왜곡 보정 | raw 영상과 사전 측정 K+D를 이용한 `cv::undistort` 경로 반영 | 렌즈 왜곡 상태와 Core 입력 프로파일의 불일치 방지 |
+| 실행 설정 | `calibration_adapter.json`에서 staged, raw, intrinsic, 탐색 범위 동기화 | CAP adapter가 업데이트된 Core 옵션을 호출하도록 정렬 |
+| 카메라 프로파일 | `camera_intrinsic.json` 추가 | PNM-C16083RVQ CH1의 ChArUco K+D 입력을 OpenSDK 패키지에 포함 |
+| 출처 기록 | `automatic_calibration/UPSTREAM.md` 갱신 | 소스가 `Automatic_Calibration_Part`의 `develop`에서 가져온 것임을 기록 |
+
+커밋 통계는 7개 파일, `+1945/-243`이다. 이 수치는 OpenSDK 앱 전체를 새로 만든
+크기가 아니라, 기존에 이식되어 있던 Core 사본을 최신 구현과 호환시키기 위해 소스,
+실행기, 설정, 프로파일, 출처 문서를 함께 갱신한 범위다.
+
+### 업데이트에 포함된 Core 동작
+
+OpenSDK 쪽에 동기화된 Core는 다음 경로를 사용한다.
+
+```text
+raw CH1 JPEG
+  -> camera_intrinsic.json의 K+D로 cv::undistort
+  -> LiDAR surface/structural feature 추출
+  -> 5° coarse search
+  -> Gaussian basin/local 1° search
+  -> 선택 seed에 대한 Ceres 6-DoF refinement
+  -> support·ambiguity·result gate
+  -> calibration_result.json
+```
+
+업데이트된 adapter의 중요한 실행 조건은 다음과 같다.
+
+| 옵션 | OpenSDK 값 | 해석 |
+|---|---:|---|
+| `--camera-channel` | `1` | Core 입력은 UI 기준 CH1 |
+| `--ldc-enabled` | `false` | 별도 장치 LDC가 아니라 Core의 raw→undistort 경로 사용 |
+| `--image-distortion-state` | `raw` | 입력 JPEG가 미보정 원본임을 명시 |
+| `--manual-intrinsic` | `../res/camera_intrinsic.json` | K+D 프로파일 고정 |
+| `--search-strategy` | `staged` | staged coarse-to-fine 탐색 사용 |
+| 카메라 중심 | `(0.05928, -0.08105, 0) m` | LiDAR 원점 기준 CH1 오프셋 |
+| down 범위 | `0°..30°`, step `5°` | OpenSDK 실행 시 탐색 범위 |
+| optical roll | `-15°..15°`, step `5°` | OpenSDK 실행 시 탐색 범위 |
+| timeout | `1800 s` | CAP adapter의 최대 Core 대기 시간 |
+
+`camera_intrinsic.json`은 다음 입력 기준을 고정한다.
+
+```text
+camera model       = PNM-C16083RVQ
+resolution         = 2592 × 1520
+fx, fy             = 2033.901952, 2037.779638
+cx, cy             = 1337.029701, 745.370056
+distortion model   = OpenCV RadTan
+accepted frames    = 18
+calibration RMS    = 0.647206679 px
+profile status     = PASS
+profile id         = charuco-pass-clean18-20260814
+```
+
+이 프로파일 수치는 OpenSDK Core가 사용하는 입력 기준을 설명하기 위한 것이다. 이
+문서의 OpenSDK 기여 판정은 프로파일을 새로 만든 앱 개발로 해석하지 않고, 낮은 버전의
+Core가 최신 왜곡 보정 경로를 사용할 수 있도록 프로파일과 실행 설정을 함께 반영한
+업데이트로 기록한다.
+
+## OpenSDK 업데이트 검증 로그
+
+### 정적 동기화 확인
+
+| 로그 ID | 확인 방법 | 확인 결과 | 증거 수준 |
+|---|---|---|---|
+| OSDK-SYNC-01 | `d94b862`의 변경 파일과 commit message 대조 | Core header/source, 실행기, adapter, K+D profile, UPSTREAM이 함께 갱신됨 | Git diff 확인 |
+| OSDK-SYNC-02 | `UPSTREAM.md`의 출처·변경 목록 대조 | `Automatic_Calibration_Part` `develop` 기반이며 staged, undistort, multimodal, validation gate가 기록됨 | 저장소 문서 확인 |
+| OSDK-SYNC-03 | adapter 옵션과 실행기 인자 이름 대조 | `--manual-intrinsic`, `--image-distortion-state raw`, `--search-strategy staged`가 최신 OpenSDK 경로에 반영됨 | 설정·소스 대조 |
+| OSDK-SYNC-04 | intrinsic profile JSON schema·품질 필드 확인 | 18 accepted views, RMS `0.647206679 px`, `status=PASS`, `solved=true` | 프로파일 정적 확인 |
+
+### 실행 검증의 한계
+
+현재 OpenSDK 저장소에서 확인된 `d94b862` 증적은 소스·설정·출처 문서와 intrinsic
+profile이다. OpenSDK 장치에서 실제 CAP을 패키징하고 실행한 `output/core.log`,
+`calibration_result.json`, `matching_scene_000.png` 결과는 저장소에서 확인되지
+않았다. 따라서 아래를 문서상 PASS로 주장하지 않는다.
+
+- CV5 장치에서 `run_real_calibration`이 실제로 완료되었다는 런타임 PASS
+- OpenSDK 웹 화면의 `/run`부터 결과 검증까지의 E2E PASS
+- 실제 CH1 영상과 LiDAR JSON으로 계산된 외부 파라미터의 제품 승인
+- `d94b862` 자체가 MobileSAM·LSD·TCP server·CAP 앱 구조를 개발했다는 주장
+
+OpenSDK 측의 후속 검증은 동일한 소스 버전의 Core 실행 파일, adapter JSON, intrinsic
+profile, CH1 image, LiDAR JSON, `core.log`, 결과 JSON과 결과 PNG를 한 세션에 보존해야
+한다. 실행 결과가 `candidate_ready`여도 제품 외부 파라미터 자동 활성화와는 별개의
+후보 상태로 기록한다.
 
 ## 입력 파일과 세션 구조
 

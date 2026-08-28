@@ -51,11 +51,11 @@ sequenceDiagram
     participant G as gen-certs.sh
     participant M as mosquitto
 
-    A->>A: gen-certs.sh --new-token youngbin
+    A->>A: gen-certs.sh --new-token Youngbin
     A-->>Q: 토큰 + 서버주소 전달 (사람 손으로)
     Q->>E: POST /enroll {token, device_name}
     E->>E: 토큰 검증 (아직 소비하지 않음)
-    E->>G: fork/exec --client qt-console-youngbin
+    E->>G: fork/exec --client qt-console-Youngbin
     G-->>E: <CN>.crt / <CN>-trad.key
     E->>M: adts.acl 에 CN 블록 추가 + systemctl reload
     E->>E: 토큰 소비 (파일에서 삭제)
@@ -108,8 +108,8 @@ Content-Type: application/json
 
 ```
 # 1회용 발급 토큰 — '<토큰> <라벨>' 한 줄에 하나. 사용되면 자동으로 지워진다.
-3f9a1c…  youngbin
-b70e42…  hyunwoo
+3f9a1c…  Youngbin
+b70e42…  Hyunwoo
 ```
 
 **라벨이 CN 접미사가 된다** — `qt-console-<라벨>`. 관리자가 "누구에게 준 토큰인지"를
@@ -199,7 +199,7 @@ mosquitto 의 `user` 는 **정확 매칭이고 와일드카드가 없다.** 발�
 직접 붙여야 한다.
 
 ```
-user qt-console-youngbin
+user qt-console-Youngbin
 topic write adts/cmd/#
 topic read  adts/state/#
 topic read  adts/event/#

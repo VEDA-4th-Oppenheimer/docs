@@ -30,7 +30,7 @@
 | 14-bit Raw 각도 복원 및 $0.1^\circ$(`ddeg`) 변환 공식 | 모터 스텝 펄스 가감속 생성 (`motor.c`) |
 | $220\,\Omega$ 직렬 댐핑 저항 기반 신호 무결성(SI) 보호 회로 | 라이다 실시간 각도 래치 (`scan_latch_angles`) |
 | SCL 9클럭 토글 + RCC 강제 리셋 3단계 버스 복구 (`Encoder_BusRecover`) | RPi 통신 프로토콜 프레임 조립 (`uart_rpi.c`) |
-| Monitor-Only 전략 및 3-샘플 중앙값 필터 기반 $2.0^\circ$ 탈조 판정 | |
+| Monitor-Only 전략 및 3-샘플 중앙값 필터 기반 $3.0^\circ$ 탈조 판정 | |
 
 ---
 
@@ -133,7 +133,7 @@ HAL_StatusTypeDef Encoder_BusRecover(I2C_HandleTypeDef *hi2c)
 
 ## 5. Monitor-Only 전략 및 3-샘플 중앙값 필터
 
-* **엔코더 고유 지터 격리**: 스윕 중에는 스텝모터의 정밀한 개루프 스텝 펄스를 신뢰하여 매끄러운 3D 궤적을 형성하고, 엔코더는 **각 줄 끝 정지 구간에서 $2.0^\circ$ 초과 탈조 여부만 감시(Monitor-Only)**한다.
+* **엔코더 고유 지터 격리**: 스윕 중에는 스텝모터의 정밀한 개루프 스텝 펄스를 신뢰하여 매끄러운 3D 궤적을 형성하고, 엔코더는 **각 줄 끝 정지 구간에서 $3.0^\circ$ 초과 탈조 여부만 감시(Monitor-Only)**한다.
 * **3-샘플 중앙값 필터**: 각 행 스캔 완료 후 40ms 정착 시점에서 엔코더를 3회 연속 판독하여 중앙값을 취함으로써 단발성 I2C 스파이크 노이즈를 효과적으로 제거한다.
 $$\text{err}_{\text{final}} = \text{median}(\text{err}_1, \text{err}_2, \text{err}_3)$$
 

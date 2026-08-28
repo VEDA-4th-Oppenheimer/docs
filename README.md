@@ -84,6 +84,8 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [overview.md](components/qt/overview.md) | 앱 구조, RTSP 4채널, MQTT, 화면·조작, 포인트클라우드, 트러블슈팅 | 송영빈 |
+| [spatial-alignment.md](components/qt/spatial-alignment.md) | CCTV metadata와 LiDAR point cloud의 공간 정합, 2D/3D 시각화와 테스트 | 광진 |
+| [rtsp-analysis.md](components/qt/rtsp-analysis.md) | Wireshark 기반 RTSP/RTP·H.264 분석과 Qt 수신 대응 | 광진 |
 
 ### OpenSDK 카메라 애플리케이션
 
@@ -93,13 +95,21 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [vision-preprocessing.md](components/opensdk/vision-preprocessing.md) | 추가 검증용 영상 전처리·LSD CAP — 현재 캘리브레이션 구조에는 미사용, VPT-31/92와 공개 앱 구현 차이 | 이영민 |
 | [mobile-sam.md](components/opensdk/mobile-sam.md) | 추가 검증용 MobileSAM CAP — 현재 캘리브레이션 구조에는 미사용, ONNX·OpenCV DNN·4채널 마스크 검증 | 이영민 |
 | [tcp-server.md](components/opensdk/tcp-server.md) | LiDAR JSON mTLS 수신, 파일 framing·검증, 세션 저장과 송수신 계약 차이 | 이영민 |
-| [calibration-app.md](components/opensdk/calibration-app.md) | JSON 선택, 4채널 Snapshot, 채널 1 staging, Core 실행과 후보 결과 판정 | 이영민 |
+| [calibration-app.md](components/opensdk/calibration-app.md) | JSON 선택, 4채널 Snapshot, 채널 1 staging, Core 실행과 구버전 auto_calib Core 업데이트 범위 | 이영민 (앱) / 광진 (Core 업데이트) |
 
 ### 자동 캘리브레이션
 
 | 문서 | 내용 | 담당 |
 |---|---|---|
 | [cv5-optimization.md](components/calibration/cv5-optimization.md) | staged 탐색, 렌즈 왜곡 보정, Cortex-A76·NEON·Ceres 최적화와 검증 경계 | 이영민 |
+| [analysis/](components/calibration/analysis/) | 논문·방법 분석의 목적, 전제, 현재 Core와 문헌의 대응 | 광진 |
+| [auto-core.md](components/calibration/auto-core.md) | Automatic Calibration Core의 구현 구조와 `lkj000619` 커밋 이력 | 광진 |
+| [paper-review.md](components/calibration/paper-review.md) | targetless LiDAR–camera calibration 논문 검토와 문헌·구현·실험 증거의 구분 | 광진 |
+| [analyzer-experiments.md](components/calibration/analyzer-experiments.md) | T1/T2 analyzer 구현·테스트 현황과 production 미승격 판정 | 광진 |
+| [experiment-evidence.md](components/calibration/experiment-evidence.md) | Calibration 관련 커밋·실험·출력물 증적 registry | 광진 |
+| [manual-reference.md](components/calibration/manual-reference.md) | ChArUco 출력물, Manual intrinsic·왜곡 보정 기준과 예비 RT 사용 경계 | 광진 |
+| [experiments/](components/calibration/experiments/) | Core·Manual·Jenkins·Analyzer 실험 이력과 판정 규칙 | 광진 |
+| [verification/](components/calibration/verification/) | Core suite·hold-out·analyzer 검증과 PASS 증거 수준 | 광진 |
 
 ### 가이드
 
@@ -112,3 +122,4 @@ A.D.T.S — 1D LiDAR Pan-Tilt 스캐너 기반 Edge AI CCTV 마커리스 자동 
 | [qt-build-and-deploy.md](guides/qt-build-and-deploy.md) | Qt 콘솔 의존성·빌드·등록·배포 패키징 (macOS/Windows) | 송영빈 |
 | [broker-token-runbook.md](guides/broker-token-runbook.md) | 발급 토큰 생성·회수, ACL 확인, 접속 끊기, 증상별 진단 | 송영빈 |
 | [opensdk-build-and-deploy.md](guides/opensdk-build-and-deploy.md) | CV5 Docker·CMake 빌드, OpenCV/Ceres 교차 컴파일, CAP 배포와 mTLS 운영 점검 | 이영민 |
+| [jenkins-calibration-reproducibility.md](guides/jenkins-calibration-reproducibility.md) | 현재 Jenkins dataset 수집·패키징과 후속 Calibration test 재현성 계획 | 광진 |
