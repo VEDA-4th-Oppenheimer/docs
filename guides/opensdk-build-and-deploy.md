@@ -1,7 +1,8 @@
 # CV5 OpenSDK 애플리케이션 빌드 및 CAP 배포
 
-Hanwha Vision CV5용 `tcp_server`, `sam_segmentation`, `lsd_line_detection`,
-`calibration` 앱의 Docker/CMake 빌드와 카메라 배포 절차를 정리한다. 공개 기준은
+Hanwha Vision CV5용 `tcp_server`, `calibration`과 추가 검증용
+`lsd_line_detection`, `sam_segmentation` 앱의 Docker/CMake 빌드와 카메라 배포
+절차를 정리한다. 현재 자동 캘리브레이션 구조는 두 검증용 앱을 사용하지 않는다. 공개 기준은
 OpenSDK `704fbd1`, `a0832b6`, `d94b862`(2026-08-19~2026-08-24), 통합 및 성능
 설정은 2026-08-24 로컬 `tcp_server`·`calibration` 1.2 작업본이다.
 
@@ -26,9 +27,9 @@ git log -3 --oneline
 ```text
 OpenSDK/
 ├── tcp_server/
-├── sam_segmentation/
-├── lsd_line_detection/
-└── calibration/
+├── calibration/
+├── lsd_line_detection/     # 현재 구조와 분리된 추가 검증용 CAP
+└── sam_segmentation/       # 현재 구조와 분리된 추가 검증용 CAP
 ```
 
 2026-08-24 공개 Git의 `tcp_server`, `calibration` manifest 버전은 `1.0`이다. 별도
@@ -67,23 +68,12 @@ toolchain prefix를 지정한다. 일반 Ubuntu/WSL의 x86-64 compiler와 라이
 
 ## 3. 공통 CAP을 빌드한다
 
-각 앱 디렉터리에서 앱 이름을 지정하고 Docker Compose를 실행한다.
+현재 구조에서 사용하는 각 앱 디렉터리에서 앱 이름을 지정하고 Docker Compose를
+실행한다.
 
 ```bash
 cd tcp_server
 export APP_NAME=tcp_server
-docker compose up --build
-```
-
-```bash
-cd sam_segmentation
-export APP_NAME=sam_segmentation
-docker compose up --build
-```
-
-```bash
-cd lsd_line_detection
-export APP_NAME=lsd_line_detection
 docker compose up --build
 ```
 
@@ -104,7 +94,29 @@ docker compose
 확인한다. CAP, `app/build`, 모델·개인키 및 runtime storage를 Git에 무분별하게
 커밋하지 않는다.
 
-## 4. MobileSAM 의존성을 준비한다
+## 4. 추가 검증 CAP을 별도로 빌드한다
+
+`lsd_line_detection`과 `sam_segmentation`은 현재 자동 캘리브레이션의 필수 빌드·배포
+대상이 아니다. LSD 동작을 추가로 검증할 때만 다음 독립 CAP을 빌드한다.
+
+```bash
+cd lsd_line_detection
+export APP_NAME=lsd_line_detection
+docker compose up --build
+```
+
+이 CAP의 선분 결과는 `calibration` 앱이나 `run_real_calibration`에 전달되지 않는다.
+
+### MobileSAM 추가 검증
+
+`sam_segmentation`은 현재 자동 캘리브레이션의 필수 빌드·배포 대상이 아니다.
+MobileSAM ONNX와 4채널 마스크를 추가로 검증할 때만 독립 CAP으로 빌드한다.
+
+```bash
+cd sam_segmentation
+export APP_NAME=sam_segmentation
+docker compose up --build
+```
 
 `sam_segmentation`에는 다음 CV5용 OpenCV 4.12 모듈이 필요하다.
 
@@ -127,6 +139,9 @@ app/res/models/mobile_sam_grid_prompts.bin
 `mobile_sam.pt`는 ONNX 재변환에만 사용한다. OpenCV 4.12에서 동적
 `Shape/Slice/Gather`가 남은 decoder는 로드에 실패할 수 있으므로 프로젝트의 고정
 shape export 결과를 사용한다.
+
+이 CAP의 마스크 결과는 `calibration` 앱이나 `run_real_calibration`에 전달되지 않는다.
+현재 구조만 배포하는 경우 이 절 전체를 생략한다.
 
 ## 5. Calibration 의존성을 교차 컴파일한다
 
@@ -205,8 +220,9 @@ readelf -d app/bin/run_real_calibration
 1. 대상 카메라의 관리자 화면에서 기존 앱 이름과 `AppVersion`을 확인한다.
 2. 새 `.cap` 파일을 업로드하고 `tcp_server`, `calibration`을 각각 설치한다.
 3. 앱 이름, 실제 설치 버전과 앱 웹 페이지 접근 가능 여부를 확인한다.
-4. `sam_segmentation` 또는 `lsd_line_detection`은 필요한 경우 별도 CAP으로 설치한다.
-5. 앱별 로그에서 LifeCycleManager, AppDispatcher와 필수 `.so`가 정상적으로
+4. LSD 추가 검증을 수행할 때만 `lsd_line_detection` CAP을 별도로 설치한다.
+5. MobileSAM 추가 검증을 수행할 때만 `sam_segmentation` CAP을 별도로 설치한다.
+6. 앱별 로그에서 LifeCycleManager, AppDispatcher와 필수 `.so`가 정상적으로
    초기화되는지 확인한다.
 
 `tcp_server`와 `calibration`은 하나의 CAP이 아니다. 두 앱을 함께 설치해도 공개
