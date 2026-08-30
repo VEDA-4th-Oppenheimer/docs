@@ -5,7 +5,7 @@
 | 문서 ID | `ADTS-YOC-72` |
 | 담당 | 이현우 |
 | 대상 소스 | `yocto/meta-adts/recipes-kernel/`, `recipes-bsp/adts-overlays/` |
-| 기준 코드 | Yocto `8f4e897` (2026-08-20) · RPi `SRCREV 7b347a4` |
+| 기준 코드 | Yocto `947f5b5` (2026-08-26) · RPi `SRCREV f199cf4` (미커밋) |
 
 ---
 
@@ -152,6 +152,11 @@ KERNEL_MODULE_AUTOLOAD += "turret_driver imu_driver led_sw_driver"
 | 단기 | 자동 적재를 끄고 systemd 로 시스템 초기화 이후 적재 |
 | 근본 | DT descriptor 기반 API 로 통일하고 `-EPROBE_DEFER` 를 그대로 상위로 올린다. 잘못된 legacy fallback 제거 |
 
+단기 우회는 적용하지 않았다. 근본 수정이 RPi `f199cf4`(2026-08-27, `led_sw_driver.c`
+64줄 변경)에 들어왔기 때문이다. Yocto 레시피의 `SRCREV` 를 그 커밋으로 올려 이미지를
+다시 구웠으나, 그 이미지로 부팅해 `/dev/led_sw` 가 부팅 직후 생기는지는 아직 확인하지
+않았다.
+
 `-EPROBE_DEFER` 를 올릴 때 전역 포인터를 남기면 안 된다. devm 이 메모리를 회수하므로
 재probe 가 해제된 메모리를 쓴다.
 
@@ -171,9 +176,13 @@ ICM-20948 이 물리적으로 연결되지 않았다면 정상적인 실패다. 
 | 모듈 3종 빌드 | 단계별 이미지 phase2 | B | 성공 |
 | DTBO 3종 빌드 | `dtc -@` | B | 성공 |
 | `/dev/turret` 생성 | Raspberry Pi OS 실기 | A | 정상 |
-| `/dev/led_sw` 부팅 자동 생성 | 실기 | D | 6절 |
-| `/dev/imu` | 실기 | C | `-EIO` — 배선 확인 필요 |
-| Yocto 이미지 부팅 후 3종 | — | D | 미실행 |
+| Yocto 이미지 부팅 | 실기 SD | A | 2026-08-27 커널 `6.12.75-v8` |
+| 오버레이 3종 적용 | `grep -rl adts /proc/device-tree/` | A | `led_sw`, `i2c@7e804000/imu@69`, `serial@7e201000/turret` |
+| `/dev/turret` (Yocto) | 실기 | A | `turret probed -> ready (proto v6)` |
+| `/dev/imu` | 실기 | C | DT 는 `1-0069` 에 바인딩. probe `-5` — 칩 미연결 상태의 정상 결과 |
+| `/dev/led_sw` 부팅 자동 생성 | 실기 | D | `SRCREV 7b347a4` 기준 실패. 6절 |
+| `led_sw` 부팅 후 수동 적재 | 실기 | A | `gpio-529` 로 정상. 6절 |
+| `f199cf4` 수정 반영 확인 | — | D | 이미지는 구웠으나 미부팅 |
 
 ---
 

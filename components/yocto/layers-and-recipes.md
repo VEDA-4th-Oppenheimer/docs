@@ -5,7 +5,7 @@
 | 문서 ID | `ADTS-YOC-71` |
 | 담당 | 이현우 |
 | 대상 소스 | `yocto/meta-adts/`, `yocto/conf/bblayers.conf`, `yocto/conf/local.conf` |
-| 기준 코드 | Yocto `8f4e897` (2026-08-20) + 미커밋 레시피 4종 |
+| 기준 코드 | Yocto `947f5b5` (2026-08-26) · RPi `SRCREV f199cf4` (미커밋) |
 
 ---
 
@@ -17,8 +17,9 @@
 2. 패키지가 build 되는 것
 3. 패키지가 최종 image manifest 에 들어가는 것
 
-셋은 서로 다른 증거다. 현재 새 runtime/image 레시피는 존재하지만 2·3 단계 검증 기록이
-없다.
+셋은 서로 다른 증거다. 2026-08-27 에 세 단계가 모두 확인됐다 — `bitbake adts-image` 가
+성공하고(2), manifest 에 우리 패키지 8종이 들어갔으며(3), 그 이미지를 부팅해 서비스가
+떴다.
 
 ---
 
@@ -102,18 +103,18 @@ IMAGE_INSTALL:append = "wpa-supplicant"    # 앞 항목과 붙어버린다
 | `linux-raspberrypi_6.12.bbappend` | 커널 버전·커밋 핀 | 커밋됨 |
 | `adts-drivers_git.bb` | `.ko` 3종 | 커밋됨 |
 | `adts-overlays_git.bb` | `.dtbo` 3종 | 커밋됨 |
-| `adts-daemon_git.bb` | 데몬 + systemd unit + pi 계정 | 미커밋 |
-| `adts-broker_git.bb` | 인증서 발급 서비스 + mosquitto 설정 | 미커밋 |
-| `adts-kit-config_1.0.bb` | sudoers + PATH | 미커밋 |
-| `mosquitto_%.bbappend` | `include_dir` 활성화 | 미커밋 |
-| `adts-image.bb` | 제품 조립 | 미커밋 |
+| `adts-daemon_git.bb` | 데몬 + systemd unit + pi 계정 | 커밋됨 |
+| `adts-broker_git.bb` | 인증서 발급 서비스 + mosquitto 설정 | 커밋됨 |
+| `adts-kit-config_1.0.bb` | sudoers + PATH | 커밋됨 |
+| `mosquitto_%.bbappend` | `include_dir` 활성화 | 커밋됨 |
+| `adts-image.bb` | 제품 조립 | 커밋됨 |
 
 ### 4.1 `adts-drivers_git.bb` — 커널 모듈
 
 ```bitbake
 inherit module
 SRC_URI = "git://github.com/VEDA-4th-Oppenheimer/RPi.git;protocol=https;branch=main"
-SRCREV  = "7b347a4e41deeaf16da584aca48ca2c1420d319f"
+SRCREV  = "f199cf467276c0521e9976f2c91cece9767179f5"
 
 # 저장소 전체를 받고 그 안의 driver/ 에서 빌드한다.
 # driver/ 만 받으면 안 된다 — Makefile 이 -I../shared 로 protocol.h 마스터를
@@ -151,7 +152,7 @@ KERNEL_MODULE_AUTOLOAD += "turret_driver imu_driver led_sw_driver"
 
 ```bitbake
 DEPENDS = "dtc-native"
-SRCREV  = "7b347a4e41deeaf16da584aca48ca2c1420d319f"   # 드라이버와 동일
+SRCREV  = "f199cf467276c0521e9976f2c91cece9767179f5"   # 드라이버와 동일
 S = "${WORKDIR}/git/driver/overlays"
 inherit deploy
 
@@ -356,10 +357,12 @@ EXTRA_USERS_PARAMS = "usermod -p '\$6\$...' pi;"
 | 레이어 인식 | `bitbake-layers show-layers` | B | 7개 |
 | 커널 핀 적용 | `bitbake -e linux-raspberrypi \| grep LINUX_VERSION` | B | 6.12.75 |
 | 드라이버·오버레이 빌드 | 단계별 이미지 phase2 | B | 성공 |
-| `SRCREV` 4개 레시피 일치 | 2026-08-24 `grep SRCREV meta-adts` | B | 전부 `7b347a4` |
-| 새 runtime 레시피 4종 | — | D | parse 이상 미검증 |
-| `bitbake adts-image` | — | D | 미실행 |
-| manifest 포함 확인 | — | D | 미실행 |
+| `SRCREV` 4개 레시피 일치 | 2026-08-28 `grep SRCREV meta-adts` | B | 전부 `f199cf4` |
+| 새 runtime 레시피 4종 | 개별 `bitbake` | B | 2026-08-27 전부 성공 |
+| `bitbake adts-image` | — | B | 2026-08-27 성공 |
+| manifest 포함 확인 | `*.manifest` | B | 우리 패키지 8종 + mosquitto·bash·openssl-bin |
+| 데몬 조건부 컴파일 | `objdump -p \| grep NEEDED` | B | `libssl`·`libcrypto`·`libmosquitto`·`libcjson` 링크 확인 |
+| 브로커 실기 기동 | `netstat -tln` | A | 8883·8443 LISTEN |
 
 ---
 

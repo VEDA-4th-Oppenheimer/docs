@@ -5,7 +5,7 @@
 | 문서 ID | `ADTS-YOC-70` |
 | 담당 | 이현우 (설계·문서). 빌드 실행은 사용자가 직접 한다 |
 | 대상 소스 | `yocto/Dockerfile`, `yocto/ybuild.sh`, `yocto/conf/local.conf` |
-| 기준 코드 | Yocto `8f4e897` (2026-08-20) + 미커밋 레시피 4종 |
+| 기준 코드 | Yocto `947f5b5` (2026-08-26) · RPi `SRCREV f199cf4` (미커밋) |
 | 타깃 | `raspberrypi4-64` / Poky 5.0.19 Scarthgap LTS / 커널 6.12.75 |
 
 ---
@@ -198,9 +198,10 @@ ADTS 소스:
 | `setup` / `init` | `bitbake-layers show-layers` | B | 7개 레이어 인식 |
 | `core-image-minimal` 빌드 | 첫 빌드 약 50분 (M4 Pro 8코어) | B | 성공 |
 | 단계별 이미지 산출 | `yocto/images/` 타임스탬프 | B | 2026-08-20 phase1b·phase2·phase3 생성 |
-| `adts-image` 빌드 | — | D | 미실행 |
-| 부팅 후 장치 확인 | — | D | 미실행. `guides/yocto-build.md` 체크리스트 |
-| 레시피 4종 추적 | `git ls-files` | D | 2026-08-24 기준 `recipes-adts/`·`recipes-connectivity/` 미추적 |
+| `adts-image` 빌드 | `bitbake adts-image` | B | 2026-08-27 성공 (증분 수 분) |
+| 부팅 후 장치 확인 | 실기 SD 부팅 | A | 2026-08-27 커널 `6.12.75-v8`, systemd, `ttyAMA0`, `i2c-1`, `wlan0` |
+| 레시피 8종 추적 | `git ls-files` | B | 2026-08-26 `947f5b5` 로 전부 커밋 |
+| `SRCREV` 갱신 | `grep SRCREV meta-adts` | C | `f199cf4` 로 올렸으나 미커밋. 그 이미지는 미부팅 |
 
 ---
 

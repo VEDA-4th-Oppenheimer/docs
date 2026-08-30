@@ -5,7 +5,7 @@
 | 문서 ID | `ADTS-YOC-73` |
 | 담당 | 이현우 (문서). 빌드·플래시 실행은 사용자가 직접 한다 |
 | 대상 소스 | `yocto/ybuild.sh` |
-| 기준 코드 | Yocto `8f4e897` (2026-08-20) |
+| 기준 코드 | Yocto `947f5b5` (2026-08-26) |
 
 빌드 호스트 구성과 설계 근거는 [../components/yocto/image.md](../components/yocto/image.md)
 에 있다.
@@ -107,17 +107,43 @@ systemctl status adts-daemon adts-enroll mosquitto
 ### 5.1 인증서 부트스트랩 (첫 부팅 1회)
 
 ```sh
-/opt/adts/gen-certs.sh <RPi_IP>
+sudo /opt/adts/gen-certs.sh <RPi_IP> /etc/adts/certs
 ```
 
 그 전까지 mosquitto 와 adts-daemon 은 인증서가 없어 실패한다. 의도된 동작이다.
 조용히 degraded 로 도는 것보다 시끄럽게 실패하는 편이 낫다.
 
-발급 후 권한을 확인한다.
+출력 디렉터리를 반드시 적는다. `gen-certs.sh` 는 모드마다 기본값이 다르다.
+
+| 모드 | 출력 기본값 |
+|---|---|
+| 전체 발급 `<IP> [디렉터리]` | `./certs` — 현재 디렉터리 기준 |
+| `--client <CN>` | `/etc/adts/certs` |
+| `--server <CN>` | `/etc/adts/certs` |
+
+전체 발급만 상대 경로다. 홈에서 인자 없이 실행하면 `~/certs` 에 만들어지고, mosquitto
+는 계속 `Unable to load CA certificates` 로 실패한다. 그 디렉터리에는 `ca.key` 가 들어
+있으므로 잘못 만들었으면 지운다.
+
+발급 뒤 데몬 계정이 개인키를 읽을 수 있는지 확인한다.
 
 ```sh
-ls -l /etc/adts/certs/daemon.key      # 640, group adts
+ls -l /etc/adts/certs/daemon.key
+sudo chgrp pi /etc/adts/certs/daemon.key && sudo chmod 640 /etc/adts/certs/daemon.key
 ```
+
+`gen-certs.sh` 는 모든 키를 `600 root` 로 만들고, mosquitto 용 `server.key` 만 따로
+읽기 권한을 조정한다. 데몬용 `daemon.key` 에는 같은 처리가 없어서 `User=pi` 로 도는
+데몬이 읽지 못한다. 증상이 권한 문제로 보이지 않는 것이 함정이다.
+
+```
+[MQTT]   TLS 설정 실패 (Invalid arguments provided.)
+[camera] TLS 준비 실패: 키 읽기 실패(권한 확인): /etc/adts/certs/daemon.key
+```
+
+`mosquitto_tls_set()` 이 `MOSQ_ERR_INVAL` 을 돌려주므로 설정 오류처럼 읽힌다. camera
+모듈이 같은 키에 대해 권한이라고 말해주는 쪽이 정확하다. Raspberry Pi OS 배포에서는
+`install-service.sh` 가 이 상태를 검사해 알려주지만 Yocto 경로에는 그 검사가 없다.
 
 ---
 
@@ -179,10 +205,12 @@ flash·verify 한 뒤 호환성 확인을 통과해야 데몬 스캔을 허용�
 |---|---|---|
 | `core-image-minimal` 빌드 | B | 성공 (약 50분) |
 | 단계별 이미지 산출 | B | 2026-08-20 phase1b·phase2·phase3 생성 |
-| `adts-image` 빌드 | D | 미실행 |
-| manifest 확인 | D | 미실행 |
-| SD 기록 + 부팅 | D | 미실행 |
-| 부팅 체크리스트 | D | 미실행 |
+| `adts-image` 빌드 | B | 2026-08-27 성공 |
+| manifest 확인 | B | 우리 패키지 8종 + mosquitto·bash·openssl-bin 확인 |
+| SD 기록 + 부팅 | A | 2026-08-27 부팅 |
+| 부팅 체크리스트 | A | 커널·systemd·UART·I2C·WiFi·오버레이 3종·`/dev/turret` 확인 |
+| 브로커·발급 서비스 기동 | A | `gen-certs.sh` 후 8883·8443 LISTEN |
+| 데몬 MQTT 접속 | D | `daemon.key` 권한 때문에 실패. 아래 참조 |
 
 ---
 
